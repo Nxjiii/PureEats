@@ -40,3 +40,6 @@
 #  username: username
 #  password: password
 #  queue: queue
+
+rest:
+  url: "https://pureeats.onrender.com/webhooks/rest/webhook"
