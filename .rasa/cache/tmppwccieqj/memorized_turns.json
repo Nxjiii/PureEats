@@ -1,0 +1,32 @@
+{
+  "lookup": {
+    "eJyLrq6NBQAEOAGx": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taS2NhYA6dwbhQ==": "utter_greet",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpbhMiAUAQvc0lw==": "action_listen",
+    "eJydjkEKgDAMBL/SB/iCfkUkhBqlVFtJUy8lfzdQ74K3nWVYdu46uX4x3YBBYsne9REg40nevXDEKpTNbZXYnJgNxbudiUQ/NpoIMQz138LHC2EMCbZSVrAKE6kuD3n3U0s=": "utter_food_logging",
+    "eJydjkEOgCAMBL/CA3wBXzGmIVgJQYspxQvh7xLxjvHWbWYnO5c6qXIyXmCs+EhalX4AmQO1esPukyA1NifkxnhqUbRyjCh14MgiyNDRf4bBCmFjA2wxrtBeJuC3RU9hj855cp+kyw2Rm3QU": "action_listen",
+    "eJydjsEJgDAQBFtJAVaQVkSOQ1cJmotcTj8hvRvRv+BvB2aX7UvtXNkVJ/FoIYl35QkkHOHdC1vIBmnukaHNCdLQvFsUsPqxcZhB6VH/LXy84LzSnJQieCPFmGKETHx3cq3DBSevV94=": "utter_meal_recommendation",
+    "eJydjl0KgzAQhK+SA3iCXEVkWXQsoWYjm7UvIXdvSvpYsPo2A9/8jKUOruyKF/FsIYl3pQsSjvDua7aQDdLYI0MbE6RZ8+6hgNWTjsMMSh2913DygvOT1qQUwRsp5hQjZOFPJv937kfy6sz0BoxvgB8=": "action_listen",
+    "eJydjlEKgCAQBa/iATqBV4lYRF4h1Srr2o949wT7F/p7A8Pw1toWU5PgIec1RLamjkHsbljzwRWygrtbMqQ7gTuqNYcA2iaNogqhof4rTF64fNIehQQ+JLS2vYFJUhA=": "utter_recipe_request",
+    "eJydjlEKgCAQBa/iATqBV4lYRF4hldm69iPePcG+Iij62n0wDNPn0qkcGAcZK27zWuX2kDcrtLrG4qLAVzZFcGWcr1O0mhiQ8uJIImBq6D/DS4WJM40bE8O6gG85ja1nT4gPXXfncALEKXKQ": "action_listen",
+    "eJydjkEKAjEMRa/SA3iCXmWQUIavBLXtJKkLy9zdYGcpzOgq+fB4vKmvp9Cr4ElpNi45hj4eyumBGLZxZzVkZ5tCnOHs02K4CmDrjqOZQWig/xl2KpLe6FKEBDNXHMsZrJ+lQb90/eY8GFiLfDjllyvPbxIYkrY=": "utter_portion_size",
+    "eJydjkEKAjEMRa/SA8wJehWRUIavBMe2JuksLHP3KdaNIEx1lQReHu9Ut8nVLFgpzMYpelf7QjHc4d37WFgNsbFFIY3h2E7z7iqAbQeOYgahjv5nOKgIeqNLEhLMnDGW09k2HgX6pes352BgTvLilJ+DmR8fg97zDmKUtSg=": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpeSZQMAVufn5KfGleRmJBQWVtbWxAN75UWc=": "utter_cheer_up",
+    "eJydjlEKgCAQRK/iATqBV4lYxJYUchVdgxDv3oL9G/0MM/B4zNr6olrKeIGx7CNp1UYBMgG1esfpCyMJWwtmYTzJZK2OjMh94qjMmGGg/wyTFyHGHSo5k9L97Yx1KFnTzLU9XiFuqQ==": "utter_did_that_help",
+    "eJytjlEKgCAQRK/iATqBV4lYRIcUahVbg5DunlD/RvQzzMDjMWM9B1VTxk7GSoisVb0LsVmh1TOWsAm4sWVDbkzgNkWrOQNydhxFBJlu9Juh82KN0VFhb1I63p2xHi1L+sPlgiPxRshj6QqnC1EGjek=": "action_listen",
+    "eJytj9EJwzAMRFfxAJ3Aq4QgRKzUglg2ilwoxrvXkP67tP0Rd/B4nJbWb64VpQfgZpzFu3YFEEzk3bscfBrJYOtJOhiWUc27uxJZnziqGSlc6HeGyYqUc4AqEUt5fjZmizRuLf9wBQ5gEQ0iHT8KJ3/ivrOm3tcXH2yoGw==": "utter_happy",
+    "eJytj0EKAyEMRa/iAXoCr1JKCGOmBsYomVgoMnevYLfFoe0m5MPn5eXajotrRekBuBhn8a6NBQQTefcOG+9G0rt1J+0dlh7Nu7sS2TFhVDNSGNXvCBOLlHOAKhFLeZ6TWSL1Wcs/WIEDWESDSNuPwMmfuK6s6ZzVuPcRcXsBe37Blg==": "action_listen",
+    "eJydjlEKgCAQBa/iATqBV4lYtnqJZBrr2o9494T6D/p7A8PwxtoGU0/BRbyoT9Ga+gyKfMCaF4LPitjdkiHd8bGjWuME0PbRKKoQetR/hY8XnHfiORWlLaWVOASI88itTTfLLFYr": "utter_food_allergies",
+    "eJydjkEKhDAQBL+SB/iCfEVkGLWVsDGRycRL8O8bcE9e4nrrhuqi+3J2puyCg3hSF4M15QoUeIM1v+JdUoTK5gSpjAu1qjWrAHo2HFkVQhf6ztB4welDPMastMQ4E3sPWR3Ss2O3zR/24QsYp3ql": "action_listen",
+    "eJytjkEKwyAQRa/iAXICr1LCME1/g2i1jGM34t0jmFU2ltLd/OH9x7/Vtpj6FnyIN3UpWlPHQZFfsOYMwWVF7GzJkM642KNaswugbeIoqhAa6G+GyQrOnvieitIzpQdxCJDdIX837NL5m30yWoU3P5T9xR6trQc1UZlZ": "utter_food_logging",
+    "eJytjkEKAyEMRa/iAXoCrzKUkE7TIFozxNiNzN0r2NVsnJbu8sP/j7e0/eLapvQCXC1I9q6NAzI+ybtPSKEY5d6thbR3Qu7RvGMlsn3CqGakMKq/ESYWWCLgTarBQ+QOmBIpByrnxA6bv9En0qa4xoHsL4z0hW0S5pD5FPT6BpD0uiI=": "action_listen",
+    "eJydjkEKgDAMBL+SB/iCfkUkFEklWFNJUy+lf7dS74K3HRiGnWuboJ5KF/rVOImDOgaKP8jBC5GzkXS3ZNLusHQ0B5sSWftoFDNSHOq/wscLn3cMSVGKKT+mj8gSUmvLDc6cVlw=": "utter_nutritional_info",
+    "eJydjkEKgDAMBL/SB/iCfkUkFEklqKmkqZfSv1vRm4eqt12YHbbPpTN5E9zBjUqBrclXAHYrWnOXhaIiVzZFlMoQ16rWTIKopeFIqihwof8MjRcuzuCDACcVOkm3ALEP7449Vh/8wwE2SHwM": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpeSZQMAVufn5KSDzE4EGxQIAPEFQdQ==": "utter_happy",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpeSZQMAVufn5KSDzE4l0SkZiQUElfmNiAVKZa5w=": "action_listen",
+    "eJytj1EKwyAQRK/iAXoCr1LCInGIQrKKWQNFvHsX7L+h7c8yA4/H7LP1h2m54CK3SkxsTRuB2B2w5lP2eApY2XqiKBNZq1izFUD6xFFFUGig3xkmK46UPFUOLufXvTFrgN6a/+Hy0ZMEJxSw/yic/OnBqlje0A2nVg==": "utter_goodbye",
+    "eJytj9EJwzAMRFfxAJ3Aq4Qg3PiIDYlsHLkQTHavIP0NDm1/hA6Op6ehHQ/TcsGL3CQxsTXtXIjdCms+YYmbgLVbNxTtRNYo1swFkKPDqCIodFa/I3Qs1pQ8VQ4u5/2ezBSgs+Z/sHz0JMEJBSw/Ajt/evBNp1mPPndcIcY3+fTA0w==": "action_listen",
+    "eJydjkEKgDAMBL/SB/iCfkUkBF2lWFtJo5fSvxvQe8HbDgzDjrUNrp6Cm3jWkJN39R2U+IB3H8RQFMncq0DMCclQvdsE0NZpXKoQetV/hc4LLjutWegAR7LMSWEBl9amB3TEVbI=": "utter_meal_prep_tips",
+    "eJydjlEKgzAQRK+SA/QEuUqRZWlHWdQYdtf+hNzdgIV+Rvs3A28e8yz1EUpWfIhfLluKoZyBEq+I4VsWMUdq7G7Qxkhq1WOYFPDacezuUDrR/wydF2wzjZvSCl6oaTLJG2zXfv1GLtluyIcDHzh5yA==": "action_listen"
+  }
+}

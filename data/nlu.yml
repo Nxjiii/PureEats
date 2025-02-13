@@ -1,0 +1,332 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - moin
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+
+- intent: goodbye
+  examples: |
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+
+- intent: affirm
+  examples: |
+    - yes
+    - y
+    - indeed
+    - of course
+    - that sounds good
+    - correct
+
+- intent: deny
+  examples: |
+    - no
+    - n
+    - never
+    - I don't think so
+    - don't like that
+    - no way
+    - not really
+
+- intent: mood_great
+  examples: |
+    - perfect
+    - great
+    - amazing
+    - feeling like a king
+    - wonderful
+    - I am feeling very good
+    - I am great
+    - I am amazing
+    - I am going to save the world
+    - super stoked
+    - extremely good
+    - so so perfect
+    - so good
+    - so perfect
+
+- intent: mood_unhappy
+  examples: |
+    - my day was horrible
+    - I am sad
+    - I don't feel very well
+    - I am disappointed
+    - super sad
+    - I'm so sad
+    - sad
+    - very sad
+    - unhappy
+    - not good
+    - not very good
+    - extremly sad
+    - so saad
+    - so sad
+
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+
+
+- intent: ask_for_help
+  examples: |
+    - Can you help me?
+    - I need assistance.
+    - Help me out.
+    - How do I use this?
+    - I have a question.
+    - I need some guidance.
+    - Can you assist me?
+
+- intent: ask_for_meal_recommendations
+  examples: |
+    - What should I eat today?
+    - Can you recommend a healthy meal?
+    - Give me a meal idea.
+    - Suggest a healthy dinner.
+    - I need a quick lunch idea.
+    - What's a good breakfast option?
+    - Recommend something nutritious.
+
+- intent: ask_for_nutritional_info
+  examples: |
+    - What's the nutrition in this food?
+    - How much protein does this contain?
+    - Tell me about the vitamins in spinach.
+    - What are the macros in chicken breast?
+    - How much fiber is in an apple?
+    - Can you give me nutrition details for rice?
+    - Is this food high in fat?
+
+- intent: ask_for_calorie_count
+  examples: |
+    - How many calories are in this meal?
+    - What's the calorie count for an avocado?
+    - How many calories does an egg have?
+    - Can you tell me the calories in pasta?
+    - What's the calorie content of a banana?
+    - How many calories should I eat in a day?
+    - Is this meal high in calories?
+
+- intent: ask_for_recipe
+  examples: |
+    - Can you give me a recipe?
+    - What's a good recipe for chicken?
+    - I need a healthy smoothie recipe.
+    - How do I make a salad?
+    - Can you suggest a low-calorie meal recipe?
+    - Give me a simple breakfast recipe.
+    - What’s the best way to cook salmon?
+
+- intent: ask_about_ingredients
+  examples: |
+    - What ingredients are in this dish?
+    - Can you tell me what’s in a Caesar salad?
+    - What do I need to make pasta?
+    - What are the ingredients for hummus?
+    - Is there sugar in this meal?
+    - Does this dish contain dairy?
+    - How do I make this with fewer ingredients?
+
+- intent: ask_for_portion_size
+  examples: |
+    - How much should I eat?
+    - What’s the right portion for a meal?
+    - How big should my servings be?
+    - Can you help me with portion control?
+    - Should I eat a whole avocado or just half?
+    - How much rice should I serve per person?
+    - What’s a healthy portion size for steak?
+
+- intent: ask_for_meal_prep_ideas
+  examples: |
+    - Can you give me meal prep ideas?
+    - What’s a good meal to prepare in advance?
+    - I need easy meal prep recipes.
+    - How do I meal prep for the week?
+    - What’s a good meal prep strategy?
+    - Can you suggest meals I can store for later?
+    - What’s the best way to prep healthy meals?
+
+- intent: ask_about_food_allergies
+  examples: |
+    - Does this contain nuts?
+    - Is this food safe for someone with a gluten allergy?
+    - Can you tell me if this has dairy?
+    - What are common food allergens?
+    - How do I check if a dish is allergy-friendly?
+    - Are there soy ingredients in this?
+    - Can you suggest allergy-friendly meals?
+
+- intent: track_food_intake
+  examples: |
+    - I want to track my food intake.
+    - How can I log what I eat?
+    - Can you help me record my meals?
+    - Add my lunch to my food log.
+    - I ate a salad, can you track it?
+    - Log my breakfast for today.
+    - I need to keep track of my calories.
+
+- intent: share_food_logging
+  examples: |
+    - Can I share my food log?
+    - How do I send my meal tracking to a friend?
+    - I want to share my daily food intake.
+    - Can I export my food log?
+    - Is there a way to share my meal history?
+    - How can I show my nutrition coach what I eat?
+    - Let me send my diet log to someone.
+
+- intent: ask_for_meal_plan_suggestions
+  examples: |
+    - Can you suggest a meal plan?
+    - I need a weekly meal plan.
+    - What’s a good meal plan for weight loss?
+    - Can you create a meal schedule for me?
+    - What’s a healthy meal plan?
+    - I need meal ideas for the whole week.
+    - Suggest a meal plan for muscle gain.
+
+- intent: ask_for_healthy_eating_tips
+  examples: |
+    - How can I eat healthier?
+    - Give me some healthy eating tips.
+    - What’s the best way to improve my diet?
+    - How do I start eating clean?
+    - Can you suggest ways to make my meals healthier?
+    - What’s a good balanced diet?
+    - How do I cut down on sugar?
+
+- intent: ask_for_cooking_instructions
+  examples: |
+    - How do I cook this meal?
+    - Can you give me cooking steps?
+    - What’s the best way to bake salmon?
+    - How do I sauté vegetables?
+    - Give me step-by-step cooking instructions.
+    - What’s the easiest way to cook chicken breast?
+    - How do I cook quinoa properly?
+
+- intent: ask_for_food_storage_tips
+  examples: |
+    - How should I store vegetables?
+    - What's the best way to keep fruits fresh?
+    - How long can I keep cooked rice in the fridge?
+    - Can you give me food storage tips?
+    - How do I store leftovers properly?
+    - Should I refrigerate avocados?
+    - What's the best way to store nuts?
+
+- intent: ask_for_vegan_recipes
+  examples: |
+    - Can you suggest some vegan recipes?
+    - I need a vegan meal idea.
+    - Give me a plant-based meal suggestion.
+    - What are some good vegan dinners?
+    - Do you have a recipe for vegan pasta?
+    - How can I make a vegan smoothie?
+    - Suggest a dairy-free, plant-based meal.
+
+- intent: ask_for_gluten_free_options
+  examples: |
+    - What are some gluten-free meal options?
+    - Can you give me a gluten-free recipe?
+    - I need a gluten-free diet plan.
+    - Are there gluten-free alternatives for bread?
+    - Suggest a gluten-free dessert.
+    - What can I eat if I avoid gluten?
+    - Give me a gluten-free breakfast idea.
+
+- intent: ask_for_vegetarian_recipes
+  examples: |
+    - I want a vegetarian meal idea.
+    - Can you suggest some vegetarian recipes?
+    - What’s a good meat-free dinner?
+    - Give me a recipe without meat.
+    - I need a vegetarian-friendly meal plan.
+    - Do you have a vegetarian soup recipe?
+    - What are some high-protein vegetarian meals?
+
+- intent: ask_for_low_calorie_meals
+  examples: |
+    - Can you suggest some low-calorie meals?
+    - I need a low-calorie dinner idea.
+    - What are some healthy, low-calorie foods?
+    - How can I eat fewer calories but stay full?
+    - Give me a low-calorie meal plan.
+    - Suggest a low-calorie snack.
+    - What’s a good low-calorie lunch option?
+
+- intent: ask_for_dietary_preferences
+  examples: |
+    - What diet types do you support?
+    - Can you suggest meals for a keto diet?
+    - I follow a Mediterranean diet, any meal ideas?
+    - What are some high-protein meal options?
+    - Do you have recipes for a paleo diet?
+    - I need meal ideas for a low-carb diet.
+    - Can you suggest a meal that fits my macros?
+
+- intent: ask_for_calorie_tracking
+  examples: |
+    - How can I track my calories?
+    - Can you help me log my calorie intake?
+    - I want to monitor my daily calories.
+    - What’s my total calorie count today?
+    - Can I get a summary of my calorie intake?
+    - Show me my calorie balance.
+    - I need help tracking my meals.
+
+- intent: ask_for_ingredient_substitutes
+  examples: |
+    - What can I use instead of eggs?
+    - Is there a dairy-free substitute for milk?
+    - What’s a good alternative to sugar?
+    - Can I replace butter with something healthier?
+    - What’s a gluten-free replacement for flour?
+    - How can I make a recipe without cheese?
+    - I need a substitute for soy sauce.
+
+- intent: ask_for_quick_meal_suggestions
+  examples: |
+    - I need a quick meal idea.
+    - What’s a healthy meal I can make in 10 minutes?
+    - Can you suggest a fast and easy dinner?
+    - I want something simple to cook.
+    - What’s an easy snack to prepare?
+    - Give me a quick meal with few ingredients.
+    - What’s a fast meal for lunch?
+
+- intent: ask_for_metabolism_boosting_foods
+  examples: |
+    - What foods help boost metabolism?
+    - Can you suggest metabolism-friendly meals?
+    - What should I eat to speed up my metabolism?
+    - Are there drinks that help burn fat?
+    - What’s a good breakfast for metabolism?
+    - How can I eat to increase my energy levels?
+    - Which foods help with weight loss?

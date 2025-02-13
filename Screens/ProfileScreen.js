@@ -1,12 +1,22 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
 
 function ProfileScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <SafeAreaView style={ styles.container}>
       <Text> Profile Screen </Text>
-    </View>
+    </SafeAreaView>
   );
 }
+
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#2E3837',
+    flex: 1,
+   justifyContent: 'center',
+   alignItems: 'center'
+  }
+});
 
 export default ProfileScreen;

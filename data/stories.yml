@@ -1,0 +1,127 @@
+version: "3.1"
+
+stories:
+- story: happy path
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: mood_great
+    - action: utter_happy
+
+- story: sad path 1
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: mood_unhappy
+    - action: utter_cheer_up
+    - action: utter_did_that_help
+    - intent: affirm
+    - action: utter_happy
+
+- story: sad path 2
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: mood_unhappy
+    - action: utter_cheer_up
+    - action: utter_did_that_help
+    - intent: deny
+    - action: utter_did_that_help  
+
+- story: Greet and get meal recommendations
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_for_meal_recommendations
+    - action: utter_meal_recommendation
+
+- story: Ask for nutritional info
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_for_nutritional_info
+    - action: utter_nutritional_info
+
+- story: Ask for meal prep tips
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_for_meal_prep_ideas
+    - action: utter_meal_prep_tips
+
+- story: Track food intake
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: track_food_intake
+    - action: utter_food_logging
+
+- story: Ask for recipe and portion size
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_for_recipe
+    - action: utter_recipe_request
+    - intent: ask_for_portion_size
+    - action: utter_portion_size
+
+- story: Ask for allergies and food logging
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_about_food_allergies
+    - action: utter_food_allergies
+    - intent: track_food_intake
+    - action: utter_food_logging
+
+- story: Greet and get help with meal recommendation
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_for_meal_recommendations
+    - action: utter_meal_recommendation
+
+- story: User asks for nutritional information
+  steps:
+    - intent: ask_for_nutritional_info
+    - action: utter_nutritional_info
+
+- story: User asks for a gluten-free recipe
+  steps:
+    - intent: ask_for_gluten_free_options
+    - action: utter_recipe_request
+
+- story: User is tracking calories
+  steps:
+    - intent: ask_for_calorie_tracking
+    - action: utter_calorie_tracking
+    - intent: ask_for_calorie_count
+    - action: utter_calorie_count
+
+- story: User wants to track food intake
+  steps:
+    - intent: track_food_intake
+    - action: utter_food_logging
+
+- story: User asks for ingredient substitutes
+  steps:
+    - intent: ask_for_ingredient_substitutes
+    - action: utter_ingredient_substitutes
+
+- story: User is asking for meal prep ideas
+  steps:
+    - intent: ask_for_meal_prep_ideas
+    - action: utter_meal_prep_tips
+
+- story: User seeks healthy eating tips
+  steps:
+    - intent: ask_for_healthy_eating_tips
+    - intent: ask_for_quick_meal_suggestions
+    - action: utter_quick_meal_suggestions
+
+- story: User wants a meal plan suggestion
+  steps:
+    - intent: ask_for_meal_plan_suggestions
+    - action: utter_meal_plan
+    - intent: ask_for_dietary_preferences
+    - action: utter_dietary_preferences
