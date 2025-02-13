@@ -6,18 +6,49 @@ const ChatbotScreen = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const scrollViewRef = useRef();
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (message.trim()) {
+      // Add the user's message to the chat history
       setChatHistory([...chatHistory, { user: message }]);
-      setMessage('');
-
-      // Simulate bot response 
-      setTimeout(() => {
+      setMessage(''); // Clear the message input field
+    
+      try {
+        // Send the user's message to the Rasa API using fetch
+        const response = await fetch('https://pureeats.onrender.com/webhooks/rest/webhook', {
+          method: 'POST', // Use POST method to send data
+          headers: {
+            'Content-Type': 'application/json', // content type as JSON
+          },
+          body: JSON.stringify({
+            sender: 'user', // The sender of the message 
+            message: message, // The user's message to send to Rasa
+          }),
+        });
+    
+        // Check if the response status is 200 (OK)
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+    
+        // Parse the response from Rasa
+        const data = await response.json();
+    
+        // Check if the bot has responded (array of messages)
+        if (data && data.length > 0) {
+          // Add bot response to the chat history
+          setChatHistory(prevChatHistory => [
+            ...prevChatHistory,
+            { bot: data[0].text }, // Assuming the bot responds with a "text" field
+          ]);
+        }
+      } catch (error) {
+        // If an error occurs, log the error and send a default error message to the chat
+        console.error('Error sending message to Rasa:', error);
         setChatHistory(prevChatHistory => [
           ...prevChatHistory,
-          { bot: 'This is a bot reply!' }, // Placeholder response
+          { bot: 'Sorry, there was an error. Please try again.' }, // Error message to inform the user
         ]);
-      }, 1000); // processing effect 1 sec
+      }
     }
   };
 
