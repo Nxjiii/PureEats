@@ -1,16 +1,17 @@
+# Use the official Rasa image
 FROM rasa/rasa:3.6.0  
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy the Rasa project files into the container
+# Copy all Rasa project files into the container
 COPY . /app
 
-# Install any dependencies listed in the requirements.txt file
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port Render will use (default is 10000)
+# Expose the Render dynamic port
 EXPOSE $PORT
 
-# Start the Rasa server, making it listen on the dynamic $PORT
-CMD ["rasa", "run", "--port", "$PORT", "--cors", "*"]
+# Run Rasa on the assigned port with API enabled
+CMD ["rasa", "run", "--enable-api", "--cors", "*", "--port", "10000"]
