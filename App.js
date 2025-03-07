@@ -1,41 +1,58 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
-import HomeScreen from './Screens/HomeScreen';
-import ProfileScreen from './Screens/ProfileScreen';
-import ChatbotScreen from './Screens/ChatbotScreen';
-import CommunityScreen from './Screens/CommunityScreen';
+import 'react-native-url-polyfill/auto';   
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNavigationContainerRef } from '@react-navigation/native';
+import { ActivityIndicator, View } from 'react-native';
+import { supabase } from './lib/supabaseClient';
+import MainNavigator from './navigation/MainNavigator';
+import AuthStack from './navigation/AuthStack';
+import MainTabs from './navigation/MainTabs';
+import SetupProfileScreen from './Screens/SetupProfileScreen';
 
+export const navigationRef = createNavigationContainerRef();
 
+// Root component to manage navigation state
+function Root() {
+  const [user, setUser] = useState(null);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setIsNewUser(session?.user?.user_metadata?.isNewUser || false);
+      setLoading(false);
+    };
 
+    fetchUser();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      setIsNewUser(session?.user?.user_metadata?.isNewUser || false);
+    });
 
-// Bottom Tab Navigator for main screens
-function MainTabs() {
-  return (
-    <Tab.Navigator screenOptions={{
-      tabBarStyle: {backgroundColor: '#2E3837',  borderTopWidth: 0, }, }}>
-      <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Chatbot" component={ChatbotScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Community" component={CommunityScreen}  options={{ headerShown: false }}/>
+    return () => subscription?.unsubscribe();
+  }, []);
 
-    </Tab.Navigator>
-  );
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#2E3837" />
+      </View>
+    );
+  }
+
+  if (!user) return <AuthStack />;
+  if (isNewUser) return <SetupProfileScreen />;
+  return <MainTabs />;
 }
 
-// Main App Navigation
+// Main App Component
 function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-      </Stack.Navigator>
+    <NavigationContainer ref={navigationRef}>
+      <MainNavigator />
     </NavigationContainer>
   );
 }
