@@ -45,8 +45,8 @@ function LoginScreen({ navigation }) {
       if (error) {
         setErrorMessage(error.message);
       } else {
-        // Don't navigate manually - let the auth listener handle it
-        // The navigation will happen automatically through MainNavigator
+
+        //  navigation happens automatically through MainNavigator
       }
     } catch (err) {
       setErrorMessage('An unexpected error occurred. Please try again.');
