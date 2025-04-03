@@ -5,6 +5,7 @@ import MainTabs from './MainTabs';
 import AuthStack from './AuthStack';
 import SetupProfileScreen from '../Screens/SetupProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
+import LoggedMeals from '../Screens/LoggedMeals';  // Import LoggedMeals screen
 
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
@@ -58,6 +59,7 @@ export default function MainNavigator() {
       return false;
     }
   };
+  
   useEffect(() => {
     const fetchAuthState = async () => {
       try {
@@ -72,7 +74,6 @@ export default function MainNavigator() {
         }
       } catch (error) {
         console.error('Initial auth check error:', error);
-        Alert.alert('Error', 'Failed to check authentication status');
       } finally {
         setLoading(false);
       }
@@ -118,13 +119,17 @@ export default function MainNavigator() {
         <RootStack.Screen
           name="SetupProfile"
           component={SetupProfileScreen}
-          initialParams={{ 
+          initialParams={{
             userId: user.id,
-            userEmail: user.email // Pass additional user info if needed
+            userEmail: user.email,
           }}
         />
       ) : (
-        <RootStack.Screen name="Main" component={ContentNavigator} />
+        <>
+          <RootStack.Screen name="Main" component={ContentNavigator} />
+          {/* Add LoggedMeals screen here */}
+          <RootStack.Screen name="LoggedMeals" component={LoggedMeals} />
+        </>
       )}
     </RootStack.Navigator>
   );

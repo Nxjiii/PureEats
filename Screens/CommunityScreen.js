@@ -4,7 +4,7 @@ import { SafeAreaView, StyleSheet, Text } from 'react-native';
 function CommunityScreen() {
   return (
     <SafeAreaView style={ styles.container}>
-      <Text style={ styles.title}> Community </Text>
+      <Text style={ styles.title}> Your Communities </Text>
     </SafeAreaView>
   );
 }
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   title: {
     color: '#BB86FC',
     fontSize: 20,
-    marginTop: 50,
+    marginTop: 20,
     textAlign: 'center',
   },
 

@@ -4,6 +4,7 @@ import HomeScreen from '../Screens/HomeScreen';
 import ProfileScreen from '../Screens/ProfileScreen';
 import ChatbotScreen from '../Screens/ChatbotScreen';
 import CommunityScreen from '../Screens/CommunityScreen';
+import Logger from '../Screens/Logger';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,7 +24,7 @@ export default function MainTabs() {
       }}>
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Chatbot" component={ChatbotScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Log" component={Logger} options={{ headerShown: false }} />
       <Tab.Screen name="Community" component={CommunityScreen} options={{ headerShown: false }} />
     </Tab.Navigator>
   );

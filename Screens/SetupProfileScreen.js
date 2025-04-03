@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, Alert, Image, Animated, StyleSheet, Touc
 import { launchImageLibrary } from 'react-native-image-picker';
 import { supabase } from '../lib/supabaseClient';
 import { useRoute } from '@react-navigation/native';
-import CustomCheckbox from './CustomCheckbox';
+import CustomCheckbox from '../components/CustomCheckbox';
 import RNFS from 'react-native-fs';
 
 
@@ -33,16 +33,19 @@ const SetupProfileScreen = ({ navigation }) => {
   const checkUsername = async () => {
     if (!profileData.username.trim()) {
       Alert.alert('Error', 'Username cannot be empty');
+      setUsernameAvailable(false);
       return false;
     }
 
     if (profileData.username.length < 3) {
       Alert.alert('Error', 'Username must be at least 3 characters');
+      setUsernameAvailable(false);
       return false;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(profileData.username)) {
-      Alert.alert('Error', 'Only letters, numbers and underscores');
+      Alert.alert('Error', 'Only letters, numbers, and underscores are allowed');
+      setUsernameAvailable(false);
       return false;
     }
 
@@ -50,20 +53,27 @@ const SetupProfileScreen = ({ navigation }) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('username')
-        .ilike('username', profileData.username.trim())
-        .neq('id', userId)
+        .eq('username', profileData.username.trim())
+        .neq('id', userId) // Exclude the current user's ID
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      const isAvailable = !data;
+      const isAvailable = !data; // If no data is returned, the username is available
       setUsernameAvailable(isAvailable);
+
       if (!isAvailable) {
         Alert.alert('Username Taken', 'Please choose another username');
       }
+
       return isAvailable;
     } catch (error) {
-      Alert.alert('Error', 'Failed to check username');
+      console.error('Error checking username:', error);
+      Alert.alert('Error', 'Failed to check username availability');
+      setUsernameAvailable(false);
       return false;
     }
   };
@@ -108,32 +118,41 @@ const SetupProfileScreen = ({ navigation }) => {
       return;
     }
 
-    // validation logic for other steps
+    // Validation logic for other steps
     if (step === 1 && !isNameValid()) {
       Alert.alert('Invalid Name', 'Please enter your full name');
       return;
     }
+
     if (step === 2) {
-      const isValid = await checkUsername();
-      if (!isValid) return;
+      const isValid = await checkUsername(); // Check username availability
+      if (!isValid) {
+        // If username is not valid, stop progression
+        return;
+      }
     }
+
     if (step === 3 && !isDOBValid()) {
       Alert.alert('Invalid Date', 'Please enter a valid date. You must be at least 16 years old.');
       return;
     }
+
     if (step === 4 && !isGenderValid()) {
       Alert.alert('Invalid Selection', 'Please select your gender');
       return;
     }
+
     if (step === 5 && !isAllergiesValid()) {
       Alert.alert('Invalid Selection', 'Please select at least one allergy');
       return;
     }
+
     if (step === 6 && !isgoalsValid()) {
       Alert.alert('Invalid Selection', 'Please select your goals');
       return;
     }
 
+    // Move to the next step if all validations pass
     setStep(prev => prev + 1);
   };
 
