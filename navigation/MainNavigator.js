@@ -5,10 +5,24 @@ import MainTabs from './MainTabs';
 import AuthStack from './AuthStack';
 import SetupProfileScreen from '../Screens/SetupProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
-import LoggedMeals from '../Screens/LoggedMeals';  // Import LoggedMeals screen
+import LoggedMeals from '../Screens/LoggedMeals';
+import BackButton from '../components/BackButton';
 
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
+
+// Define common header styling for dark theme
+const darkHeaderStyle = {
+  headerStyle: {
+    backgroundColor: '#121212', // Match your page background
+    elevation: 0, // Remove shadow on Android
+    shadowOpacity: 0, // Remove shadow on iOS
+  },
+  headerTintColor: '#BB86FC', // Match your purple accent color
+  headerTitleStyle: {
+    color: '#FFFFFF', // White text for header titles
+  }
+};
 
 function AuthNavigator() {
   return (
@@ -19,9 +33,28 @@ function AuthNavigator() {
 }
 
 function ContentNavigator() {
+  // Apply dark header styling to all screens in this navigator
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+    <Stack.Navigator
+      screenOptions={darkHeaderStyle}
+    >
+      {/* MainTabs doesn't need a header */}
+      <Stack.Screen 
+        name="MainTabs" 
+        component={MainTabs} 
+        options={{ headerShown: false }} 
+      />
+      
+      {/* Any additional screens that should have back buttons */}
+      <Stack.Screen 
+        name="LoggedMeals" 
+        component={LoggedMeals}
+        options={{
+          headerTitle: 'Logged Meals',
+          headerLeft: () => <BackButton />
+        }}
+      />
+      {/* Add other non-tab screens here with similar configuration */}
     </Stack.Navigator>
   );
 }
@@ -40,12 +73,10 @@ export default function MainNavigator() {
         .eq('id', userId)
         .maybeSingle();  
   
-      // No error and no data means profile doesn't exist yet
       if (!data) return false;
   
       if (error) throw error;
   
-      // Check both the explicit flag and required fields as fallback
       return data.profile_complete || Boolean(
         data.username &&
         data.full_name &&
@@ -63,7 +94,6 @@ export default function MainNavigator() {
   useEffect(() => {
     const fetchAuthState = async () => {
       try {
-        // Check current auth state
         const { data: { session } } = await supabase.auth.getSession();
         const currentUser = session?.user || null;
         setUser(currentUser);
@@ -81,7 +111,6 @@ export default function MainNavigator() {
 
     fetchAuthState();
 
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentUser = session?.user || null;
@@ -112,9 +141,15 @@ export default function MainNavigator() {
   }
 
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <RootStack.Navigator
+      screenOptions={darkHeaderStyle}
+    >
       {!user ? (
-        <RootStack.Screen name="Auth" component={AuthNavigator} />
+        <RootStack.Screen 
+          name="Auth" 
+          component={AuthNavigator} 
+          options={{ headerShown: false }}
+        />
       ) : !isProfileComplete ? (
         <RootStack.Screen
           name="SetupProfile"
@@ -123,13 +158,17 @@ export default function MainNavigator() {
             userId: user.id,
             userEmail: user.email,
           }}
+          options={{
+            headerTitle: 'Complete Your Profile',
+            headerLeft: () => <BackButton />
+          }}
         />
       ) : (
-        <>
-          <RootStack.Screen name="Main" component={ContentNavigator} />
-          {/* Add LoggedMeals screen here */}
-          <RootStack.Screen name="LoggedMeals" component={LoggedMeals} />
-        </>
+        <RootStack.Screen 
+          name="Main" 
+          component={ContentNavigator} 
+          options={{ headerShown: false }}
+        />
       )}
     </RootStack.Navigator>
   );

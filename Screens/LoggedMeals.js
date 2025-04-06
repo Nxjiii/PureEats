@@ -23,7 +23,7 @@ const LoggedMeals = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.sectionTitle}>Logged Meals</Text>
+      <Text style={styles.sectionTitle}></Text>
 
       {/* Logged Meals List */}
       <FlatList

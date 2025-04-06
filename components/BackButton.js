@@ -1,13 +1,16 @@
+import React from 'react';
+import { TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { TouchableOpacity } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
 
 const BackButton = () => {
   const navigation = useNavigation();
-
+  
   return (
-    <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
-      <ArrowLeft size={20} color="white" />
+    <TouchableOpacity 
+      onPress={() => navigation.goBack()} 
+      style={{ padding: 10 }}
+    >
+      <Text style={{ fontSize: 20, color: '#BB86FC' }}>←</Text>
     </TouchableOpacity>
   );
 };
