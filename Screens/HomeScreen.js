@@ -1,59 +1,50 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, FlatList,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, ScrollView, FlatList, Dimensions, TouchableOpacity,} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import MetricRingCard from '../components/MetricRingCard'; 
 
-const { width, height } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8; 
-const CARD_MARGIN = 10;
-const ROW_SPACING = 60;
+const { width } = Dimensions.get('window');
 
 function HomeScreen() {
-  const data = [
-    { id: '1', title: 'Recipe 1' },
-    { id: '2', title: 'Recipe 2' },
-    { id: '3', title: 'Recipe 3' },
-    { id: '4', title: 'Recipe 4' },
-    { id: '5', title: 'Recipe 5' },
-    { id: '6', title: 'Recipe 6' },
-  ];
+  const navigation = useNavigation();
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
-      <Text style={styles.cardText}>{item.title}</Text>
-    </TouchableOpacity>
-  );
 
-  const renderRow = (rowData) => (
-    <FlatList
-      horizontal
-      data={rowData}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      showsHorizontalScrollIndicator={false}
-      snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
-      decelerationRate="fast"
-      contentContainerStyle={{ paddingLeft: CARD_MARGIN / 2, paddingRight: CARD_MARGIN * 1.5 }}
-      />
-  );
+  // Metric ring card 
 
-  const rows = [data.slice(0, 2), data.slice(2, 4), data.slice(4, 6)];
+  // Placeholder total nutrients (normally fetched from API)
+  const totals = {
+    calories: 1200,
+    protein: 90,
+    carbs: 160,
+    fat: 50,
+  };
+
+
+  // Placeholder daily goals (normally from user profile or settings)
+  const goals = {
+    calories: 2000,
+    protein: 150,
+    carbs: 250,
+    fat: 70,
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.recentlySearchedContainer}>
-          <Text style={styles.recentlySearchedTitle}> Suggested Recipes</Text>
-          {rows.map((row, index) => (
-            <View key={index} style={{ marginBottom: ROW_SPACING }}>
-              {renderRow(row)}
-            </View>
-          ))}
+        
+        {/* METRIC RINGS */}
+        <Text style={styles.sectionTitle}>Your Progress</Text>
+        <View style={styles.metricsRow}>
+          <MetricRingCard label="Calories" value={totals.calories} goal={goals.calories} unit="kcal"  onPress={() => navigation.navigate('Logger')} />
+          <MetricRingCard label="Protein" value={totals.protein} goal={goals.protein} unit="g" onPress={() => navigation.navigate('Logger')}/>
+          <MetricRingCard label="Carbs" value={totals.carbs} goal={goals.carbs} unit="g" onPress={() => navigation.navigate('Logger')}/>
+          <MetricRingCard label="Fat" value={totals.fat} goal={goals.fat} unit="g" onPress={() => navigation.navigate('Logger')}/>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
+
+  
 }
 
 const styles = StyleSheet.create({
@@ -62,33 +53,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: height * 0.2, 
+    paddingBottom: 100,
   },
-  recentlySearchedContainer: {
-    padding: 20,
-  },
-  recentlySearchedTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 40, 
-    marginTop: 14,
+    color: '#FFFFFF',
+    marginTop: 24,
+    marginBottom: 16,
     textAlign: 'center',
   },
-  card: {
-    width: CARD_WIDTH,
-    height: 180,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: CARD_MARGIN,
+  metricsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  
   },
-  cardText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-  },
-
+  
+    
 });
 
 export default HomeScreen;

@@ -6,7 +6,7 @@ import MetricRingCard from '../components/MetricRingCard'; // progress ring comp
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 12;
 
-const Logger = () => {
+function Logger(){
   const navigation = useNavigation();
 
   // Placeholder total nutrients (normally fetched from API)
@@ -54,7 +54,7 @@ const Logger = () => {
             value={totals.calories}
             goal={goals.calories}
             unit="kcal"
-            onPress={() => navigation.navigate('LoggedMeals')} // 👉 Goes to logged meals screen
+            onPress={() => navigation.navigate('LoggedMeals')} //  Goes to logged meals screen
           />
           <MetricRingCard label="Protein" value={totals.protein} goal={goals.protein} unit="g" />
           <MetricRingCard label="Carbs" value={totals.carbs} goal={goals.carbs} unit="g" />

@@ -7,23 +7,26 @@ import SetupProfileScreen from '../Screens/SetupProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
 import LoggedMeals from '../Screens/LoggedMeals';
 import BackButton from '../components/BackButton';
+import Logger from '../Screens/Logger'; // Import the Logger screen
 
+// Stack navigators
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
 
-// Define common header styling for dark theme
+// Common header styling for dark theme
 const darkHeaderStyle = {
   headerStyle: {
-    backgroundColor: '#121212', // Match your page background
-    elevation: 0, // Remove shadow on Android
-    shadowOpacity: 0, // Remove shadow on iOS
+    backgroundColor: '#121212', 
+    shadowOpacity: 0,           
   },
-  headerTintColor: '#BB86FC', // Match your purple accent color
+  headerTintColor: '#BB86FC',    
   headerTitleStyle: {
-    color: '#FFFFFF', // White text for header titles
-  }
+    color: '#FFFFFF',          
+  },
 };
 
+
+// Auth flow navigator
 function AuthNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -32,51 +35,61 @@ function AuthNavigator() {
   );
 }
 
+// Main content navigator (after auth + profile setup)
 function ContentNavigator() {
-  // Apply dark header styling to all screens in this navigator
   return (
-    <Stack.Navigator
-      screenOptions={darkHeaderStyle}
-    >
-      {/* MainTabs doesn't need a header */}
-      <Stack.Screen 
-        name="MainTabs" 
-        component={MainTabs} 
-        options={{ headerShown: false }} 
+    <Stack.Navigator screenOptions={darkHeaderStyle}>
+      {/* Tabbed screens (no header) */}
+      <Stack.Screen
+        name="MainTabs"
+        component={MainTabs}
+        options={{ headerShown: false }}
       />
-      
-      {/* Any additional screens that should have back buttons */}
-      <Stack.Screen 
-        name="LoggedMeals" 
+
+      {/* Additional screens navigated to from tabs */}
+      <Stack.Screen
+        name="LoggedMeals"
         component={LoggedMeals}
         options={{
           headerTitle: 'Logged Meals',
           headerLeft: () => <BackButton />
         }}
+
       />
-      {/* Add other non-tab screens here with similar configuration */}
+       <Stack.Screen
+        name="Logger"
+        component={Logger}
+        options={{
+        headerTitle: 'Logger',
+         headerLeft: () => <BackButton />,
+        }}
+        />    
+
+
     </Stack.Navigator>
   );
 }
 
+
+
+// Main navigator controlling all flows: auth, setup, and app
 export default function MainNavigator() {
   const [user, setUser] = useState(null);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check if profile has all required fields
+  // Function to check if user's profile is complete
   const checkProfileComplete = async (userId) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('username, full_name, dob, gender, allergies, goals, profile_complete')
         .eq('id', userId)
-        .maybeSingle();  
-  
+        .maybeSingle();
+
       if (!data) return false;
-  
       if (error) throw error;
-  
+
       return data.profile_complete || Boolean(
         data.username &&
         data.full_name &&
@@ -90,7 +103,8 @@ export default function MainNavigator() {
       return false;
     }
   };
-  
+
+  // On mount: check session and profile
   useEffect(() => {
     const fetchAuthState = async () => {
       try {
@@ -111,11 +125,12 @@ export default function MainNavigator() {
 
     fetchAuthState();
 
+    // Subscribe to auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentUser = session?.user || null;
         setUser(currentUser);
-    
+
         if (currentUser) {
           const complete = await checkProfileComplete(currentUser.id);
           setIsProfileComplete(complete);
@@ -125,6 +140,7 @@ export default function MainNavigator() {
       }
     );
 
+    // Cleanup auth listener on unmount
     return () => {
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
@@ -132,6 +148,7 @@ export default function MainNavigator() {
     };
   }, []);
 
+  // While loading: show spinner
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -140,16 +157,18 @@ export default function MainNavigator() {
     );
   }
 
+  // Render root stack based on user state
   return (
-    <RootStack.Navigator
-      screenOptions={darkHeaderStyle}
-    >
+    <RootStack.Navigator screenOptions={darkHeaderStyle}>
+      {/* No user = show login/signup */}
       {!user ? (
-        <RootStack.Screen 
-          name="Auth" 
-          component={AuthNavigator} 
+        <RootStack.Screen
+          name="Auth"
+          component={AuthNavigator}
           options={{ headerShown: false }}
         />
+
+      // Logged in but profile not complete = show setup
       ) : !isProfileComplete ? (
         <RootStack.Screen
           name="SetupProfile"
@@ -163,13 +182,16 @@ export default function MainNavigator() {
             headerLeft: () => <BackButton />
           }}
         />
+
+      // Authenticated and setup = show full app
       ) : (
-        <RootStack.Screen 
-          name="Main" 
-          component={ContentNavigator} 
+        <RootStack.Screen
+          name="Main"
+          component={ContentNavigator}
           options={{ headerShown: false }}
         />
       )}
     </RootStack.Navigator>
+    
   );
 }
