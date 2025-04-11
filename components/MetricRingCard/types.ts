@@ -4,5 +4,6 @@ export interface MetricRingCardProps {
     goal: number;
     unit: string;
     onPress?: () => void;
+    size?: 'normal' | 'small';
   }
-  
+  //props
