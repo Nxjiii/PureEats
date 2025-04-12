@@ -7,7 +7,8 @@ import SetupProfileScreen from '../Screens/SetupProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
 import LoggedMeals from '../Screens/LoggedMeals';
 import BackButton from '../components/BackButton';
-import Logger from '../Screens/Logger'; // Import the Logger screen
+import Logger from '../Screens/Logger'; 
+import Search from '../Screens/Search.js';
 
 // Stack navigators
 const Stack = createStackNavigator();
@@ -64,6 +65,16 @@ function ContentNavigator() {
          headerLeft: () => <BackButton />,
         }}
         />    
+      
+      <Stack.Screen 
+      name="Search" 
+      component={Search}
+      options={{
+      headerTitle: 'Search',
+      headerLeft: () => <BackButton />,
+        }}
+       />
+
 
 
     </Stack.Navigator>

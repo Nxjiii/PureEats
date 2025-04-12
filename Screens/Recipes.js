@@ -6,7 +6,7 @@ const CARD_WIDTH = width * 0.8;
 const CARD_MARGIN = 10;
 const ROW_SPACING = 60;
 
-function SearchedFoods() {
+function Recipes() {
   const data = [
     { id: '1', title: 'Recipe 1' },
     { id: '2', title: 'Recipe 2' },
@@ -88,4 +88,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default SearchedFoods;
+export default Recipes;

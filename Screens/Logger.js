@@ -9,7 +9,7 @@ const CARD_MARGIN = 12;
 function Logger(){
   const navigation = useNavigation();
 
-  // Placeholder total nutrients (normally fetched from API)
+  // Placeholder total nutrients (to be fetched from API)
   const totals = {
     calories: 1200,
     protein: 90,
@@ -17,7 +17,7 @@ function Logger(){
     fat: 50,
   };
 
-  // Placeholder daily goals (normally from user profile or settings)
+  // Placeholder daily goals (from user profile)
   const goals = {
     calories: 2000,
     protein: 150,
@@ -25,7 +25,7 @@ function Logger(){
     fat: 70,
   };
 
-  // Recently searched foods (replaced with user-specific data later)
+  // Recently searched foods (replaced with data later)
   const recentlySearchedFoods = [
     { id: '1', name: 'Chicken Breast' },
     { id: '2', name: 'Oatmeal' },
@@ -49,25 +49,48 @@ function Logger(){
         {/* METRIC RINGS */}
         <Text style={styles.sectionTitle}>Today's Progress</Text>
         <View style={styles.metricsRow}>
+
           <MetricRingCard
             label="Calories"
             value={totals.calories}
             goal={goals.calories}
             unit="kcal"
-            onPress={() => navigation.navigate('LoggedMeals')} //  Goes to logged meals screen
+            onPress={() => navigation.navigate('LoggedMeals')} 
           />
-          <MetricRingCard label="Protein" value={totals.protein} goal={goals.protein} unit="g" />
-          <MetricRingCard label="Carbs" value={totals.carbs} goal={goals.carbs} unit="g" />
-          <MetricRingCard label="Fat" value={totals.fat} goal={goals.fat} unit="g" />
+
+          <MetricRingCard label="Protein"
+           value={totals.protein} 
+           goal={goals.protein}
+            unit="g" 
+            onPress={() => navigation.navigate('LoggedMeals')}/>
+
+          <MetricRingCard label="Carbs" 
+          value={totals.carbs} 
+          goal={goals.carbs} 
+          unit="g" 
+          onPress={() => navigation.navigate('LoggedMeals')}/>
+
+          <MetricRingCard label="Fat" 
+          value={totals.fat} 
+          goal={goals.fat}
+           unit="g" 
+           onPress={() => navigation.navigate('LoggedMeals')} />
+
         </View>
 
-        {/* LOG FOOD SECTION */}
-        <View style={styles.logSection}>
-          <TouchableOpacity style={styles.logButton}>
-            <Text style={styles.logButtonText}>Log Food</Text>
-          </TouchableOpacity>
 
-          {/* RECENTLY SEARCHED FOODS */}
+        {/* LOG FOOD SECTION */}
+
+        <View style={styles.logSection}>
+      <TouchableOpacity
+        style={styles.logButton}
+        onPress={() => navigation.navigate('Search')}>
+        <Text style={styles.logButtonText}>Log Food</Text>
+      </TouchableOpacity>
+
+ 
+          {/* RECENTLY SEARCHED FOODS */} 
+
           <Text style={styles.recentTitle}>Recently Searched</Text>
           <FlatList
             data={recentlySearchedFoods}
