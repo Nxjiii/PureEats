@@ -1,48 +1,64 @@
-// Fetch foods from Open Food Facts API based on user query
+import { API_KEY } from '@env'; 
+
+
 export const fetchFoods = async (query) => {
-    try {
-      // Call the Open Food Facts search endpoint with the query
-      const res = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1`
-      );
-  
-      const data = await res.json();
-  
-      // Filter for matches that include the query (case-insensitive)
-      const matches = data.products.filter((p) =>
-        p.product_name && p.product_name.toLowerCase().includes(query.toLowerCase())
-      );
-  
-      // Sort results by relevance: prioritize products that start with the query or contain the query early in the name
-      const sortedResults = matches.sort((a, b) => {
-        const aMatchIndex = a.product_name.toLowerCase().indexOf(query.toLowerCase());
-        const bMatchIndex = b.product_name.toLowerCase().indexOf(query.toLowerCase());
-        return aMatchIndex - bMatchIndex; // Items with query at the beginning come first
-      });
-  
-      // Clean and format the results
-      const cleanResults = sortedResults
-        .filter((p) =>
-          p.product_name && // Ensure product has a name
-          p.nutriments?.['energy-kcal_100g'] // Ensure product has calorie data
-        )
-        .slice(0, 10) // Limit to first 10 results
-        .map((item) => ({
-          name: item.product_name,
-          calories: item.nutriments['energy-kcal_100g'],
-          protein: item.nutriments['proteins_100g'] || 0,
-          fat: item.nutriments['fat_100g'] || 0,
-          carbs: item.nutriments['carbohydrates_100g'] || 0,
-          image: item.image_url || null,
-          servingSize: item.nutriments['serving_size'] || '100g',
-        }));
-  
-      return cleanResults;
-  
-    } catch (err) {
-      // Handle any errors during fetch
-      console.error('Error fetching food data:', err);
+  try {
+    // request URL consturction
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=50&dataType=Foundation,SR%20Legacy&api_key=${API_KEY}`;
+    console.log("Request URL:", url.replace(API_KEY, "API_KEY_HIDDEN"));
+
+    // Make the API request
+    const res = await fetch(url);
+    console.log("Response status:", res.status);
+
+    const data = await res.json();
+    console.log("Data received:", !!data);
+    console.log("Foods count:", data.foods?.length || 0);
+
+    if (!data.foods || data.foods.length === 0) {
       return [];
     }
-  };
-  
+
+    // Sort results by whether description contains query
+    const sortedResults = data.foods.sort((a, b) => {
+      const aContains = a.description.toLowerCase().includes(query.toLowerCase());
+      const bContains = b.description.toLowerCase().includes(query.toLowerCase());
+      if (aContains && !bContains) return -1;
+      if (!aContains && bContains) return 1;
+      return 0;
+    });
+
+    // Map and simplify the data
+    const cleanResults = sortedResults
+      .slice(0, 10)
+      .map((item) => {
+        const nutrients = item.foodNutrients || [];
+
+        const getNutrient = (keyword) => {
+          const match = nutrients.find((n) =>
+            n.nutrientName && n.nutrientName.toLowerCase().includes(keyword)
+          );
+          return match?.value || 0;
+        };
+
+        return {
+          name: item.description,
+          fdcId: item.fdcId,
+          calories: getNutrient("energy"),
+          protein: getNutrient("protein"),
+          fat: getNutrient("total lipid"),
+          carbs: getNutrient("carbohydrate"),
+          image: null,
+          servingSize: "100g",
+        };
+      });
+
+    console.log("Clean results count:", cleanResults.length);
+    return cleanResults;
+
+  } catch (err) {
+    console.error("Error fetching food data:", err);
+    console.error("Error details:", err.message);
+    return [];
+  }
+};
