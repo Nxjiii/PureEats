@@ -190,7 +190,6 @@ export default function MainNavigator() {
           }}
           options={{
             headerTitle: 'Complete Your Profile',
-            headerLeft: () => <BackButton />
           }}
         />
 

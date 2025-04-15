@@ -1,18 +1,29 @@
 import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const BackButton = () => {
+const BackButton = ({ onPress }) => {
   const navigation = useNavigation();
-  
+
   return (
     <TouchableOpacity 
-      onPress={() => navigation.goBack()} 
-      style={{ padding: 10 }}
+      onPress={onPress || (() => navigation.goBack())} // Use custom logic if provided, otherwise go back
+      style={styles.button}
     >
-      <Text style={{ fontSize: 20, color: '#BB86FC' }}>←</Text>
+      <Text style={styles.text}>←</Text>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    padding: 10,
+    marginLeft: 10,
+  },
+  text: {
+    fontSize: 20,
+    color: '#BB86FC',
+  },
+});
 
 export default BackButton;
