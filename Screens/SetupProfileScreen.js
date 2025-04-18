@@ -57,78 +57,20 @@ const SetupProfileScreen = ({ navigation }) => {
     setTargetFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Username validation
-  const checkUsername = async () => {
-    const username = profileData.username.trim().toLowerCase(); // Normalize to lowercase
-  
-    // Basic validation
-    if (!username) {
-      Alert.alert('Error', 'Username cannot be empty');
-      setUsernameAvailable(false);
-      return false;
-    }
-  
-    if (username.length < 3) {
-      Alert.alert('Error', 'Username must be at least 3 characters');
-      setUsernameAvailable(false);
-      return false;
-    }
-  
-    if (!/^[a-z0-9_]+$/.test(username)) {
-      Alert.alert('Error', 'Only lowercase letters, numbers, and underscores are allowed');
-      setUsernameAvailable(false);
-      return false;
-    }
-  
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, id');
-  
-      if (error) {
-        console.error('Supabase error:', error);
-        Alert.alert('Error', 'Failed to check username availability');
-        setUsernameAvailable(false);
-        return false;
-      }
-  
-      const match = data.find(
-        (entry) =>
-          entry.username.toLowerCase() === username &&
-          entry.id !== userId
-      );
-  
-      const isAvailable = !match;
-      setUsernameAvailable(isAvailable);
-  
-      // TEMP DEBUG
-      console.log('Match found:', match);
-      console.log('Username available:', isAvailable, '| Username entered:', username);
-  
-      if (!isAvailable) {
-        Alert.alert('Username Taken', 'Please choose another username');
-      }
-  
-      return isAvailable;
-    } catch (error) {
-      console.error('Error checking username:', error);
-      Alert.alert('Error', 'Something went wrong while checking username');
-      setUsernameAvailable(false);
-      return false;
-    }
-  };
-  
 
 
   // Field validation checks
   const isNameValid = () => {
+    const namePattern = /^[A-Za-z\-]+$/;
+    
     return (
       profileData.first_name.trim().length >= 2 &&
-      profileData.surname.trim().length >= 2
+      profileData.surname.trim().length >= 2 &&
+      namePattern.test(profileData.first_name.trim()) &&
+      namePattern.test(profileData.surname.trim())
     );
   };
   
-  const isUsernameValid = () => usernameAvailable && profileData.username.length >= 3;
   const isAllergiesValid = () => {
     return (
       nutritionData.allergies === null || // Valid if "I have no allergies" is selected
@@ -150,24 +92,38 @@ const SetupProfileScreen = ({ navigation }) => {
     return nutritionData.intensity !== '';
   };
 
-  // Handle Target Calculation Results
-  // Handle Target Calculation Results
+// Handle Target Calculation Results
 const handleTargetCalculation = (calculatedData) => {
-  const { recommendedGoal, calories, protein, carbs, fats } = calculatedData;
+  const { 
+    recommendedGoal, 
+    maintenance,
+    weightLoss,
+    bulk
+  } = calculatedData;
+  
+  // Store all calculated targets
+  const allTargets = {
+    maintenance: maintenance,
+    weightLoss: weightLoss,
+    bulk: bulk
+  };
   
   // Set the nutrition data with calculated values
   setNutritionData(prev => ({
     ...prev,
-    goal: recommendedGoal,
-    target_calories: calories,
-    target_protein: protein,
-    target_carbs: carbs,
-    target_fats: fats
+    recommendedGoal: recommendedGoal, // Set the static recommended goal
+    goal: recommendedGoal, // Start with the recommended goal as the default
+    target_calories: maintenance.calories,
+    target_protein: maintenance.protein,
+    target_carbs: maintenance.carbs,
+    target_fats: maintenance.fats,
+    allTargets: allTargets // Store all precomputed targets for later use
   }));
   
-  // Move to next step
-  setStep(10); 
+  // Move to the next step
+  setStep(9); // Go to goal selection step
 };
+
 
   // Handle Next step with animation for first step
 const handleNext = async () => {
@@ -187,48 +143,45 @@ const handleNext = async () => {
     return;
   }
 
-  if (step === 2) {
-    const isValid = await checkUsername(); // Check username availability
-    if (!isValid) {
-      // If username is not valid, stop progression
-      return;
-    }
+
+  if (step === 2 && !isAllergiesValid()) {
+    Alert.alert('Invalid Selection', 'Please select your allergies or choose "I have no allergies"');
+    return;
   }
 
   // For individual target data fields
-  if (step === 4 && !profileData.gender) {
+  if (step === 3 && !profileData.gender) {
     Alert.alert('Invalid Selection', 'Please select your gender');
     return;
   }
 
-  if (step === 5 && !targetFormData.age) {
+  if (step === 4 && !targetFormData.age) {
     Alert.alert('Invalid Input', 'Please enter your age');
     return;
   }
 
-  if (step === 6 && !targetFormData.height) {
+  if (step === 5 && !targetFormData.height) {
     Alert.alert('Invalid Input', 'Please enter your height');
     return;
   }
 
-  if (step === 7 && !targetFormData.weight) {
+  if (step === 6 && !targetFormData.weight) {
     Alert.alert('Invalid Input', 'Please enter your weight');
     return;
   }
 
-  if (step === 8 && !targetFormData.activity_level) {
+  if (step === 7 && !targetFormData.activity_level) {
     Alert.alert('Invalid Selection', 'Please select your activity level');
     return;
   }
 
-  // Step 9 is calculation button - handled in its own component
 
-  if (step === 10 && !isGoalValid()) {
+  if (step === 9 && !isGoalValid()) {
     Alert.alert('Invalid Selection', 'Please select your goal');
     return;
   }
 
-  if (step === 11 && !isIntensityValid()) {
+  if (step === 10 && !isIntensityValid()) {
     Alert.alert('Invalid Selection', 'Please select your intensity level');
     return;
   }
@@ -295,96 +248,7 @@ const handleNext = async () => {
     }
   };
 
-  const handleCompleteProfile = async () => {
-    try {
-      // First save the profile data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ 
-          id: userId,
-          full_name: profileData.full_name,
-          username: profileData.username,
-          gender: profileData.gender,
-          profile_picture_url: profileData.profile_picture_url,
-          profile_complete: true,
-          updated_at: new Date().toISOString()
-        });
 
-      if (profileError) throw profileError;
-      
-      // Then save the nutrition profile data
-      const { error: nutritionError } = await supabase
-        .from('nutrition_profiles')
-        .upsert({
-          user_id: userId,
-          allergies: nutritionData.allergies,
-          goal: nutritionData.goal,
-          intensity: nutritionData.intensity,
-          target_calories: nutritionData.target_calories,
-          target_protein: nutritionData.target_protein,
-          target_carbs: nutritionData.target_carbs,
-          target_fats: nutritionData.target_fats,
-          updated_at: new Date().toISOString()
-        });
-
-      if (nutritionError) throw nutritionError;
-      
-      // Trigger a re-render in MainNavigator
-      const { data: { session } } = await supabase.auth.getSession();
-      // This will cause the auth listener to update the state
-      await supabase.auth.onAuthStateChange.triggerEvent('PROFILE_COMPLETE', session);
-      
-      Alert.alert('Success', 'Profile setup complete!');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile');
-    }
-  };
-
-  const handleSkipProfilePicture = async () => {
-    try {
-      // First save the profile data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ 
-          id: userId,
-          full_name: profileData.full_name,
-          username: profileData.username,
-          gender: profileData.gender,
-          profile_complete: true,
-          updated_at: new Date().toISOString()
-        });
-
-      if (profileError) throw profileError;
-      
-      // Then save the nutrition profile data
-      const { error: nutritionError } = await supabase
-        .from('nutrition_profiles')
-        .upsert({
-          user_id: userId,
-          allergies: nutritionData.allergies,
-          goal: nutritionData.goal,
-          intensity: nutritionData.intensity,
-          target_calories: nutritionData.target_calories,
-          target_protein: nutritionData.target_protein,
-          target_carbs: nutritionData.target_carbs,
-          target_fats: nutritionData.target_fats,
-          updated_at: new Date().toISOString()
-        });
-
-      if (nutritionError) throw nutritionError;
-
-      // Trigger a re-render in MainNavigator
-      const { data: { session } } = await supabase.auth.getSession();
-      // This will cause the auth listener to update the state
-      await supabase.auth.onAuthStateChange.triggerEvent('PROFILE_COMPLETE', session);
-      
-      Alert.alert('Success', 'Profile setup complete!');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile');
-    }
-  };
 
   const handleBack = () => {
     if (step > 0) {
@@ -467,48 +331,9 @@ const handleNext = async () => {
   </View>
 )}
 
-      {/* Step 2 - Username */}
-      {step === 2 && (
-  <View style={styles.inputContainer}>
-    <View style={styles.inputWrapper}>
-      <TextInput
-        style={[styles.input, !usernameAvailable && styles.inputError]}
-        placeholder="Choose a username"
-        placeholderTextColor="#9E9E9E"
-        value={profileData.username}
-        onChangeText={(text) => {
-          updateField('username', text);
-          setUsernameAvailable(true); // Reset availability status on change
-        }}
-        autoCapitalize="none"
-      />
-      {!usernameAvailable && (
-        <Text style={styles.errorText}>Username not available</Text>
-      )}
-    </View>
-    <View style={styles.buttonWrapper}>
-      <Button 
-        title="Next" 
-        onPress={async () => {
-          console.log('Username validation triggered');
-          const isValid = await checkUsername();
-          console.log('Validation result:', isValid);
-        
-          Alert.alert('Validation Result', isValid ? 'Passed' : 'Failed'); // TEMPORARY DEBUG
-        
-          if (isValid) {
-            handleNext();
-          }
-        }}
-        color="#BB86FC"
-        disabled={!profileData.username.trim()} // Disable if input is empty
-      />
-    </View>
-  </View>
-)}
 
-   {/* Step 3 - Allergies */}
-{step === 3 && (
+   {/* Step 2 - Allergies */}
+{step === 2 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Select your allergies</Text>
     <View style={styles.checkboxContainer}>
@@ -565,8 +390,8 @@ const handleNext = async () => {
   </View>
 )}
 
-     {/* Step 4 - Gender */}
-{step === 4 && (
+     {/* Step 3 - Gender */}
+{step === 3 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Select your gender</Text>
     <View style={styles.genderButtonContainer}>
@@ -600,8 +425,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 5 - Age */}
-{step === 5 && (
+{/* Step 4 - Age */}
+{step === 4 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>How old are you?</Text>
     <View style={styles.inputWrapper}>
@@ -610,7 +435,11 @@ const handleNext = async () => {
         placeholder="Enter your age"
         placeholderTextColor="#9E9E9E"
         value={targetFormData.age}
-        onChangeText={(text) => updateTargetField('age', text)}
+        onChangeText={(text) => {
+          // Only allow numeric input by replacing non-numeric characters
+          const numericValue = text.replace(/[^0-9]/g, '');
+          updateTargetField('age', numericValue);
+        }}
         keyboardType="numeric"
       />
     </View>
@@ -625,8 +454,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 6 - Height */}
-{step === 6 && (
+{/* Step 5 - Height */}
+{step === 5 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>What is your height?</Text>
     <View style={styles.inputWrapper}>
@@ -635,7 +464,11 @@ const handleNext = async () => {
         placeholder="Enter your height in cm"
         placeholderTextColor="#9E9E9E"
         value={targetFormData.height}
-        onChangeText={(text) => updateTargetField('height', text)}
+        onChangeText={(text) => {
+          // Only allow numeric input
+          const numericValue = text.replace(/[^0-9]/g, '');
+          updateTargetField('height', numericValue);
+        }}
         keyboardType="numeric"
       />
     </View>
@@ -650,8 +483,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 7 - Weight */}
-{step === 7 && (
+{/* Step 6 - Weight */}
+{step === 6 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>What is your weight?</Text>
     <View style={styles.inputWrapper}>
@@ -660,7 +493,11 @@ const handleNext = async () => {
         placeholder="Enter your weight in kg"
         placeholderTextColor="#9E9E9E"
         value={targetFormData.weight}
-        onChangeText={(text) => updateTargetField('weight', text)}
+        onChangeText={(text) => {
+          // Only allow numeric input
+          const numericValue = text.replace(/[^0-9]/g, '');
+          updateTargetField('weight', numericValue);
+        }}
         keyboardType="numeric"
       />
     </View>
@@ -675,8 +512,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 8 - Activity Level */}
-{step === 8 && (
+{/* Step 7 - Activity Level */}
+{step === 7 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>What is your activity level?</Text>
     <View style={styles.activityContainer}>
@@ -695,8 +532,22 @@ const handleNext = async () => {
           ]}
           onPress={() => updateTargetField('activity_level', activity.id)}
         >
-          <Text style={styles.activityButtonText}>{activity.label}</Text>
-          <Text style={styles.activityDescription}>{activity.description}</Text>
+          <Text 
+            style={[
+              styles.activityButtonText,
+              targetFormData.activity_level === activity.id && styles.selectedButtonText
+            ]}
+          >
+            {activity.label}
+          </Text>
+          <Text 
+            style={[
+              styles.activityDescription,
+              targetFormData.activity_level === activity.id && styles.selectedButtonText
+            ]}
+          >
+            {activity.description}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -711,8 +562,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 9 - Calculate Button */}
-{step === 9 && (
+{/* Step 8 - Calculate Button */}
+{step === 8 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Let's calculate your nutrition target</Text>
     
@@ -759,11 +610,13 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 10 - Goal Confirmation (previously step 5) */}
-{step === 10 && (
+{/* Step 9 - Goal Confirmation */}
+{step === 9 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Based on your metrics, we recommend:</Text>
-    <Text style={styles.recommendedGoal}>{nutritionData.goal}</Text>
+    <Text style={styles.recommendedGoal}>
+      {nutritionData.recommendedGoal || 'No recommendation available'}
+    </Text>
     
     <Text style={styles.sublabel}>You can keep our recommendation or choose another goal:</Text>
     
@@ -775,7 +628,34 @@ const handleNext = async () => {
             styles.goalsButton,
             nutritionData.goal === goal && styles.goalsButtonSelected
           ]}
-          onPress={() => updateNutritionField('goal', goal)}
+          onPress={() => {
+            // Update goal
+            updateNutritionField('goal', goal);
+            
+            // Reset intensity when goal changes to ensure consistency
+            updateNutritionField('intensity', '');
+
+            // Update macros based on the selected goal
+            if (goal === 'Maintain') {
+              const maintenance = nutritionData.allTargets.maintenance;
+              updateNutritionField('target_calories', maintenance.calories);
+              updateNutritionField('target_protein', maintenance.protein);
+              updateNutritionField('target_carbs', maintenance.carbs);
+              updateNutritionField('target_fats', maintenance.fats);
+            } else if (goal === 'Weight Loss') {
+              const moderateTargets = nutritionData.allTargets.weightLoss.moderate;
+              updateNutritionField('target_calories', moderateTargets.calories);
+              updateNutritionField('target_protein', moderateTargets.protein);
+              updateNutritionField('target_carbs', moderateTargets.carbs);
+              updateNutritionField('target_fats', moderateTargets.fats);
+            } else if (goal === 'Bulk') {
+              const moderateTargets = nutritionData.allTargets.bulk.moderate;
+              updateNutritionField('target_calories', moderateTargets.calories);
+              updateNutritionField('target_protein', moderateTargets.protein);
+              updateNutritionField('target_carbs', moderateTargets.carbs);
+              updateNutritionField('target_fats', moderateTargets.fats);
+            }
+          }}
         >
           <Text style={styles.goalsButtonText}>{goal}</Text>
         </TouchableOpacity>
@@ -801,8 +681,8 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 11 - Intensity Selection (previously step 6) */}
-{step === 11 && (
+{/* Step 10 - Intensity Selection */}
+{step === 10 && (
   <View style={styles.inputContainer}>
     {nutritionData.goal !== 'Maintain' ? (
       <>
@@ -817,18 +697,18 @@ const handleNext = async () => {
               nutritionData.intensity === 'Moderate' && styles.intensityButtonSelected
             ]}
             onPress={() => {
+              // Update intensity
               updateNutritionField('intensity', 'Moderate');
-              // Recalculate targets based on moderate intensity
-              const updatedTargets = CalorieCalculator.adjustForIntensity(
-                nutritionData.goal,
-                'Moderate',
-                nutritionData.target_calories,
-                parseInt(targetFormData.weight)
-              );
-              updateNutritionField('target_calories', updatedTargets.calories);
-              updateNutritionField('target_protein', updatedTargets.protein);
-              updateNutritionField('target_carbs', updatedTargets.carbs);
-              updateNutritionField('target_fats', updatedTargets.fats);
+              
+              // Use precomputed values from the appropriate target
+              const goalKey = nutritionData.goal === 'Weight Loss' ? 'weightLoss' : 'bulk';
+              const moderateTargets = nutritionData.allTargets[goalKey].moderate;
+              
+              // Update nutrition targets
+              updateNutritionField('target_calories', moderateTargets.calories);
+              updateNutritionField('target_protein', moderateTargets.protein);
+              updateNutritionField('target_carbs', moderateTargets.carbs);
+              updateNutritionField('target_fats', moderateTargets.fats);
             }}
           >
             <Text style={styles.intensityButtonText}>Moderate</Text>
@@ -845,18 +725,18 @@ const handleNext = async () => {
               nutritionData.intensity === 'Intense' && styles.intensityButtonSelected
             ]}
             onPress={() => {
+              // Update intensity
               updateNutritionField('intensity', 'Intense');
-              // Recalculate targets based on intense intensity
-              const updatedTargets = CalorieCalculator.adjustForIntensity(
-                nutritionData.goal,
-                'Intense',
-                nutritionData.target_calories,
-                parseInt(targetFormData.weight)
-              );
-              updateNutritionField('target_calories', updatedTargets.calories);
-              updateNutritionField('target_protein', updatedTargets.protein);
-              updateNutritionField('target_carbs', updatedTargets.carbs);
-              updateNutritionField('target_fats', updatedTargets.fats);
+              
+              // Use precomputed values from the appropriate target
+              const goalKey = nutritionData.goal === 'Weight Loss' ? 'weightLoss' : 'bulk';
+              const intenseTargets = nutritionData.allTargets[goalKey].intense;
+              
+              // Update nutrition targets
+              updateNutritionField('target_calories', intenseTargets.calories);
+              updateNutritionField('target_protein', intenseTargets.protein);
+              updateNutritionField('target_carbs', intenseTargets.carbs);
+              updateNutritionField('target_fats', intenseTargets.fats);
             }}
           >
             <Text style={styles.intensityButtonText}>Intense</Text>
@@ -898,33 +778,117 @@ const handleNext = async () => {
   </View>
 )}
 
-{/* Step 12 - Profile Picture (previously step 7) */}
-{step === 12 && (
+
+{/* Step 11 - Profile Picture */}
+{step === 11 && (
   <View style={styles.inputContainer}>
-    <Text style={styles.label}>Upload your profile picture (optional)</Text>
+    <Text style={styles.label}>Add a profile picture</Text>
+    
+    {profilePicture ? (
+      <Image 
+        source={{ uri: profilePicture }}
+        style={styles.imagePreview} 
+        resizeMode="cover"
+      />
+    ) : (
+      <View style={styles.imagePreview} />
+    )}
+    
     <View style={styles.buttonWrapper}>
-      <Button 
-        title="Choose Image" 
-        onPress={pickImage} 
+      <Button
+        title="Choose Photo"
+        onPress={pickImage}
         color="#BB86FC"
       />
     </View>
-    {profilePicture && (
-      <Image 
-        source={{ uri: profilePicture }} 
-        style={styles.imagePreview} 
+    
+    <TouchableOpacity onPress={handleNext}>
+      <Text style={[styles.hintText, { color: '#BB86FC', marginTop: 20 }]}>
+        Skip for now
+      </Text>
+    </TouchableOpacity>
+  </View>
+)}
+
+{/* Step 12 - Username Selection */}
+{step === 12 && (
+  <View style={styles.inputContainer}>
+    <Text style={styles.label}>Choose a username</Text>
+    <View style={styles.inputWrapper}>
+      <TextInput
+        style={[styles.input, !usernameAvailable && styles.inputError]}
+        placeholder="Enter your username"
+        placeholderTextColor="#9E9E9E"
+        value={profileData.username}
+        onChangeText={(text) => {
+          updateField('username', text);
+          setUsernameAvailable(true); // Reset availability status on change
+        }}
+        autoCapitalize="none"
       />
-    )}
-    <View style={styles.buttonRow}>
-      <Button 
-        title="Skip for Now" 
-        onPress={handleSkipProfilePicture} 
-        color="#9E9E9E"
-      />
+      {!usernameAvailable && (
+        <Text style={styles.errorText}>Username not available. Please choose another.</Text>
+      )}
+    </View>
+    <View style={styles.buttonWrapper}>
       <Button 
         title="Complete Setup" 
-        onPress={handleCompleteProfile} 
+        onPress={async () => {
+          try {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .upsert({
+                id: userId,
+                full_name: profileData.full_name,
+                username: profileData.username,
+                gender: profileData.gender,
+                profile_picture_url: profileData.profile_picture_url,
+                profile_complete: true,
+                updated_at: new Date().toISOString(),
+              });
+        
+            if (profileError) {
+              if (profileError.code === '23505' && 
+                  (profileError.message.includes('profiles_username_key') || 
+                   profileError.message.includes('profiles_username_lower_idx'))) {
+                setUsernameAvailable(false);
+                return;
+              }
+              throw profileError;
+            }
+        
+            const { error: nutritionError } = await supabase
+              .from('nutrition_profiles')
+              .upsert({
+                user_id: userId,
+                allergies: nutritionData.allergies,
+                goal: nutritionData.goal,
+                intensity: nutritionData.intensity,
+                target_calories: nutritionData.target_calories,
+                target_protein: nutritionData.target_protein,
+                target_carbs: nutritionData.target_carbs,
+                target_fats: nutritionData.target_fats,
+                updated_at: new Date().toISOString(),
+              });
+        
+            if (nutritionError) throw nutritionError;
+        
+            // ✅ Notify MainNavigator setup is complete
+            if (typeof onProfileComplete === 'function') {
+              onProfileComplete();
+            }
+        
+            // OR — if not using callback:
+            // await supabase.auth.refreshSession(); // this will trigger the auth listener
+        
+          } catch (error) {
+            console.error('Error completing profile:', error);
+            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+          }
+        }}
+         
         color="#BB86FC"
+        disabled={!profileData.username.trim()} // Disable button if username is empty
       />
     </View>
   </View>
@@ -1081,6 +1045,13 @@ const styles = StyleSheet.create({
   activityButtonText: {
     color: '#E0E0E0',
     fontSize: 14,
+  },
+  activityDescription: {
+    color: '#9E9E9E',
+    fontSize: 12,
+  },
+  selectedButtonText: {
+    color: '#000000', 
   },
   intensityContainer: {
     width: '80%',
