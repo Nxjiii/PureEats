@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabaseClient';
 import MainTabs from './MainTabs';
 import AuthStack from './AuthStack';
 import SetupProfileScreen from '../Screens/SetupProfileScreen';
-import { ActivityIndicator, View } from 'react-native';
+import Welcome from '../Screens/Welcome.js';
 import LoggedMeals from '../Screens/LoggedMeals';
 import BackButton from '../components/BackButton';
 import Logger from '../Screens/Logger'; 
 import Search from '../Screens/Search.js';
+import { ActivityIndicator, View } from 'react-native';
+import HomeScreen from '../Screens/HomeScreen.js';
 
 // Stack navigators
 const Stack = createStackNavigator();
@@ -17,15 +19,14 @@ const RootStack = createStackNavigator();
 // Common header styling for dark theme
 const darkHeaderStyle = {
   headerStyle: {
-    backgroundColor: '#121212', 
-    shadowOpacity: 0,           
+    backgroundColor: '#121212',
+    shadowOpacity: 0,
   },
-  headerTintColor: '#BB86FC',    
+  headerTintColor: '#BB86FC',
   headerTitleStyle: {
-    color: '#FFFFFF',          
+    color: '#FFFFFF',
   },
 };
-
 
 // Auth flow navigator
 function AuthNavigator() {
@@ -40,82 +41,99 @@ function AuthNavigator() {
 function ContentNavigator() {
   return (
     <Stack.Navigator screenOptions={darkHeaderStyle}>
-      {/* Tabbed screens (no header) */}
       <Stack.Screen
         name="MainTabs"
         component={MainTabs}
         options={{ headerShown: false }}
       />
-
-      {/* Additional screens navigated to from tabs */}
       <Stack.Screen
         name="LoggedMeals"
         component={LoggedMeals}
         options={{
           headerTitle: 'Logged Meals',
-          headerLeft: () => <BackButton />
+          headerLeft: () => <BackButton />,
         }}
-
       />
-       <Stack.Screen
+      <Stack.Screen
         name="Logger"
         component={Logger}
         options={{
-        headerTitle: 'Logger',
-         headerLeft: () => <BackButton />,
+          headerTitle: 'Logger',
+          headerLeft: () => <BackButton />,
         }}
-        />    
-      
-      <Stack.Screen 
-      name="Search" 
-      component={Search}
-      options={{
-      headerTitle: 'Search',
-      headerLeft: () => <BackButton />,
+      />
+      <Stack.Screen
+        name="Search"
+        component={Search}
+        options={{
+          headerTitle: 'Search',
+          headerLeft: () => <BackButton />,
         }}
-       />
-
-
-
+      />
     </Stack.Navigator>
   );
 }
 
-
-
-// Main navigator controlling all flows: auth, setup, and app
+// Main navigator controlling all flows: auth, setup, welcome, and app
 export default function MainNavigator() {
   const [user, setUser] = useState(null);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Function to check if user's profile is complete
   const checkProfileComplete = async (userId) => {
     try {
-      const { data, error } = await supabase
+      // Query the 'profiles' table to check if the user profile is complete
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, full_name, dob, gender, allergies, goals, profile_complete')
+        .select('username, full_name, gender, profile_complete, welcome_complete')
         .eq('id', userId)
         .maybeSingle();
-
-      if (!data) return false;
-      if (error) throw error;
-
-      return data.profile_complete || Boolean(
-        data.username &&
-        data.full_name &&
-        data.dob &&
-        data.gender &&
-        data.allergies?.length > 0 &&
-        data.goals
+  
+      if (profileError) {
+        return false;
+      }
+  
+      if (!profileData) {
+        return false;
+      }
+  
+      // Now check if there's a nutrition profile for the user in the 'nutrition_profiles' table
+      const { data: nutritionData, error: nutritionError } = await supabase
+        .from('nutrition_profiles')
+        .select('allergies, goal, intensity, target_calories, target_protein, target_carbs, target_fats')
+        .eq('user_id', userId)
+        .maybeSingle();
+  
+      if (nutritionError) {
+        return false;
+      }
+  
+      if (!nutritionData) {
+        return false;
+      }
+  
+      // Check if profile data is complete and welcome_complete is true
+      return (
+        (profileData.profile_complete || Boolean(
+          profileData.username &&
+          profileData.full_name &&
+          profileData.gender
+        )) &&
+        nutritionData.allergies &&
+        nutritionData.goal &&
+        nutritionData.intensity &&
+        nutritionData.target_calories &&
+        nutritionData.target_protein &&
+        nutritionData.target_carbs &&
+        nutritionData.target_fats &&
+        profileData.welcome_complete
       );
     } catch (error) {
-      console.error('Profile check error:', error);
       return false;
     }
   };
+  
 
-  // On mount: check session and profile
   useEffect(() => {
     const fetchAuthState = async () => {
       try {
@@ -136,7 +154,6 @@ export default function MainNavigator() {
 
     fetchAuthState();
 
-    // Subscribe to auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentUser = session?.user || null;
@@ -151,7 +168,6 @@ export default function MainNavigator() {
       }
     );
 
-    // Cleanup auth listener on unmount
     return () => {
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
@@ -159,7 +175,6 @@ export default function MainNavigator() {
     };
   }, []);
 
-  // While loading: show spinner
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -168,18 +183,14 @@ export default function MainNavigator() {
     );
   }
 
-  // Render root stack based on user state
   return (
     <RootStack.Navigator screenOptions={darkHeaderStyle}>
-      {/* No user = show login/signup */}
       {!user ? (
         <RootStack.Screen
           name="Auth"
           component={AuthNavigator}
           options={{ headerShown: false }}
         />
-
-      // Logged in but profile not complete = show setup
       ) : !isProfileComplete ? (
         <RootStack.Screen
           name="SetupProfile"
@@ -192,16 +203,22 @@ export default function MainNavigator() {
             headerTitle: 'Complete Your Profile',
           }}
         />
-
-      // Authenticated and setup = show full app
       ) : (
         <RootStack.Screen
           name="Main"
-          component={ContentNavigator}
+          component={MainTabs}
           options={{ headerShown: false }}
         />
       )}
+
+      {/* Always available in root stack */}
+      <RootStack.Screen
+        name="Welcome"
+        component={Welcome}
+        options={{
+          headerShown: false,
+        }}
+      />
     </RootStack.Navigator>
-    
   );
 }

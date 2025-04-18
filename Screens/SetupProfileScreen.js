@@ -831,8 +831,8 @@ const handleNext = async () => {
       )}
     </View>
     <View style={styles.buttonWrapper}>
-      <Button 
-        title="Complete Setup" 
+      <Button
+        title="Complete Setup"
         onPress={async () => {
           try {
             const { error: profileError } = await supabase
@@ -846,17 +846,17 @@ const handleNext = async () => {
                 profile_complete: true,
                 updated_at: new Date().toISOString(),
               });
-        
+              
             if (profileError) {
-              if (profileError.code === '23505' && 
-                  (profileError.message.includes('profiles_username_key') || 
+              if (profileError.code === '23505' &&
+                  (profileError.message.includes('profiles_username_key') ||
                    profileError.message.includes('profiles_username_lower_idx'))) {
                 setUsernameAvailable(false);
                 return;
               }
               throw profileError;
             }
-        
+              
             const { error: nutritionError } = await supabase
               .from('nutrition_profiles')
               .upsert({
@@ -870,23 +870,22 @@ const handleNext = async () => {
                 target_fats: nutritionData.target_fats,
                 updated_at: new Date().toISOString(),
               });
-        
+              
             if (nutritionError) throw nutritionError;
-        
-            // ✅ Notify MainNavigator setup is complete
+              
+            // Let MainNavigator know the profile is complete first
             if (typeof onProfileComplete === 'function') {
               onProfileComplete();
             }
-        
-            // OR — if not using callback:
-            // await supabase.auth.refreshSession(); // this will trigger the auth listener
-        
+              
+            // Then navigate to the Welcome screen
+            navigation.navigate('Welcome');
+              
           } catch (error) {
             console.error('Error completing profile:', error);
             Alert.alert('Error', 'An unexpected error occurred. Please try again.');
           }
         }}
-         
         color="#BB86FC"
         disabled={!profileData.username.trim()} // Disable button if username is empty
       />
