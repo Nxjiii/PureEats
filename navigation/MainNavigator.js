@@ -74,6 +74,8 @@ function ContentNavigator() {
   );
 }
 
+
+
 // Main navigator controlling all flows: auth, setup, welcome, and app
 export default function MainNavigator() {
   const [user, setUser] = useState(null);
@@ -85,7 +87,7 @@ export default function MainNavigator() {
       // Query the 'profiles' table to check if the user profile is complete
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, full_name, gender, profile_complete, welcome_complete')
+        .select('username, full_name, gender, profile_complete')
         .eq('id', userId)
         .maybeSingle();
   
@@ -112,7 +114,7 @@ export default function MainNavigator() {
         return false;
       }
   
-      // Check if profile data is complete and welcome_complete is true
+      // Check if profile data is complete - removed welcome_complete check
       return (
         (profileData.profile_complete || Boolean(
           profileData.username &&
@@ -125,8 +127,7 @@ export default function MainNavigator() {
         nutritionData.target_calories &&
         nutritionData.target_protein &&
         nutritionData.target_carbs &&
-        nutritionData.target_fats &&
-        profileData.welcome_complete
+        nutritionData.target_fats
       );
     } catch (error) {
       return false;
@@ -192,25 +193,35 @@ export default function MainNavigator() {
           options={{ headerShown: false }}
         />
       ) : !isProfileComplete ? (
+
+        
         <RootStack.Screen
-          name="SetupProfile"
-          component={SetupProfileScreen}
-          initialParams={{
-            userId: user.id,
-            userEmail: user.email,
-          }}
-          options={{
-            headerTitle: 'Complete Your Profile',
-          }}
-        />
+        name="SetupProfile"
+        options={{
+          headerTitle: 'Complete Your Profile',
+        }}
+      >
+        {(props) => (
+          <SetupProfileScreen
+            {...props}
+            userId={user?.id}
+            userEmail={user?.email}
+            onProfileComplete={() => {
+              console.log('onProfileComplete invoked in MainNavigator.');
+              setIsProfileComplete(true);
+            }}
+          />
+        )}
+      </RootStack.Screen>
+      
       ) : (
         <RootStack.Screen
           name="Main"
-          component={MainTabs}
+          component={ContentNavigator}
           options={{ headerShown: false }}
         />
       )}
-
+  
       {/* Always available in root stack */}
       <RootStack.Screen
         name="Welcome"

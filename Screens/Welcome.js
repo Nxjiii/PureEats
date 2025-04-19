@@ -1,39 +1,20 @@
 import React, { useState } from 'react';
 import {  View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert} from 'react-native';
 import { supabase } from '../lib/supabaseClient';
+import { useNavigation } from '@react-navigation/native';
+
 
 const Welcome = ({ navigation }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
 
-// Function to handle entering the app
-const handleEnterApp = async () => {
-    try {
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-  
-      if (!user) throw new Error('No authenticated user found');
-  
-      // Check if the user exists in the profiles table and update welcome_complete
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ welcome_complete: true })
-        .eq('id', user.id);
-  
-      if (profileError) {
-        throw profileError;
-      }
-  
-      navigation.navigate('Main');
+  // Function to handle entering the app
+  const handleEnterApp = () => {
+    console.log(navigation.getState()); // Check what state you're in before resetting
 
-    } catch (error) {
-      console.error('Error in handleEnterApp:', error);
-      Alert.alert('Error', 'Failed to complete setup. Please try again.');
-    }
-  };
-
+    navigation.navigate('Main');
+      };
   
   
   const renderStep1 = () => (

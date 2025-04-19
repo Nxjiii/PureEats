@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, Image, Animated, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import BackButton from '../components/BackButton';
@@ -8,13 +8,25 @@ import CustomCheckbox from '../components/CustomCheckbox';
 import CalorieCalculator from '../components/CalorieCalculator';
 import RNFS from 'react-native-fs';
 
-const SetupProfileScreen = ({ navigation }) => {
+const SetupProfileScreen = ({ onProfileComplete, navigation }) => {
   const route = useRoute();
-  const userId = route.params?.userId;
+  const [userId, setUserId] = useState(null);
   const [step, setStep] = useState(0);
   const [nameAnimation] = useState(new Animated.Value(0));
   const [profilePicture, setProfilePicture] = useState(null);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
+
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id);
+      }
+    };
+  
+    fetchUser();
+  }, []);
 
   // Updated profile data structure
   const [profileData, setProfileData] = useState({
@@ -833,8 +845,12 @@ const handleNext = async () => {
     <View style={styles.buttonWrapper}>
       <Button
         title="Complete Setup"
-        onPress={async () => {
-          try {
+        onPress={async () => {  
+       console.log('Profile and nutrition data updated successfully.');
+       console.log('Invoking onProfileComplete...');
+       console.log('[SetupProfileScreen] onProfileComplete:', typeof onProfileComplete);
+
+        try {
             const { error: profileError } = await supabase
               .from('profiles')
               .upsert({
@@ -878,8 +894,10 @@ const handleNext = async () => {
               onProfileComplete();
             }
               
-            // Then navigate to the Welcome screen
-            navigation.navigate('Welcome');
+                           
+           setTimeout(() => {
+           navigation.navigate('Welcome');
+            }, 100); // 
               
           } catch (error) {
             console.error('Error completing profile:', error);
