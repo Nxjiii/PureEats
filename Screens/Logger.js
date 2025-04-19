@@ -1,4 +1,6 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { SafeAreaView, StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import MetricRingCard from '../components/MetricRingCard'; // progress ring component
@@ -8,23 +10,61 @@ const CARD_MARGIN = 12;
 
 function Logger(){
   const navigation = useNavigation();
+  const [loadingGoals, setLoadingGoals] = useState(true);
 
-  // Placeholder total nutrients (to be fetched from API)
-  const totals = {
-    calories: 1200,
-    protein: 90,
-    carbs: 160,
-    fat: 50,
-  };
+  const [goals, setGoals] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+  });
+  
 
-  // Placeholder daily goals (from user profile)
-  const goals = {
-    calories: 2000,
-    protein: 150,
-    carbs: 250,
-    fat: 70,
-  };
+//temportary hardcoded values
+const totals = {
+  calories: 1200,
+  protein: 90,
+  carbs: 160,
+  fat: 50,
+};
 
+
+  useEffect(() => {
+    const fetchGoals = async () => {
+      setLoadingGoals(true);
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+  
+      if (sessionError || !session?.user) {
+        console.error('Session error:', sessionError);
+        setLoadingGoals(false);
+        return;
+      }
+  
+      const { data, error } = await supabase
+        .from('nutrition_profiles')
+        .select('target_calories, target_protein, target_carbs, target_fats')
+        .eq('user_id', session.user.id)
+        .single();
+  
+      if (error) {
+        console.error('Failed to fetch goals:', error.message);
+      } else if (data) {
+        setGoals({
+          calories: data.target_calories,
+          protein: data.target_protein,
+          carbs: data.target_carbs,
+          fat: data.target_fats,
+        });
+      }
+  
+      setLoadingGoals(false);
+    };
+  
+    fetchGoals();
+  }, []);
   // Recently searched foods (replaced with data later)
   const recentlySearchedFoods = [
     { id: '1', name: 'Chicken Breast' },
@@ -48,35 +88,38 @@ function Logger(){
         
         {/* METRIC RINGS */}
         <Text style={styles.sectionTitle}>Today's Progress</Text>
-        <View style={styles.metricsRow}>
 
-          <MetricRingCard
-            label="Calories"
-            value={totals.calories}
-            goal={goals.calories}
-            unit="kcal"
-            onPress={() => navigation.navigate('LoggedMeals')} 
-          />
+  <View style={styles.metricsRow}>
+  <MetricRingCard
+    label="Calories"
+    value={totals.calories}
+    goal={goals.calories}
+    unit="kcal"
+    onPress={() => navigation.navigate('LoggedMeals')} 
+  />
+  <MetricRingCard
+    label="Protein"
+    value={totals.protein}
+    goal={goals.protein}
+    unit="g"
+    onPress={() => navigation.navigate('LoggedMeals')}
+  />
+  <MetricRingCard
+    label="Carbs"
+    value={totals.carbs}
+    goal={goals.carbs}
+    unit="g"
+    onPress={() => navigation.navigate('LoggedMeals')}
+  />
+  <MetricRingCard
+    label="Fat"
+    value={totals.fat}
+    goal={goals.fat}
+    unit="g"
+    onPress={() => navigation.navigate('LoggedMeals')}
+  />
+</View>
 
-          <MetricRingCard label="Protein"
-           value={totals.protein} 
-           goal={goals.protein}
-            unit="g" 
-            onPress={() => navigation.navigate('LoggedMeals')}/>
-
-          <MetricRingCard label="Carbs" 
-          value={totals.carbs} 
-          goal={goals.carbs} 
-          unit="g" 
-          onPress={() => navigation.navigate('LoggedMeals')}/>
-
-          <MetricRingCard label="Fat" 
-          value={totals.fat} 
-          goal={goals.fat}
-           unit="g" 
-           onPress={() => navigation.navigate('LoggedMeals')} />
-
-        </View>
 
 
         {/* LOG FOOD SECTION */}
