@@ -10,7 +10,9 @@ import BackButton from '../components/BackButton';
 import Logger from '../Screens/Logger'; 
 import Search from '../Screens/Search.js';
 import { ActivityIndicator, View } from 'react-native';
-import HomeScreen from '../Screens/HomeScreen.js';
+import Recipes from '../Screens/Recipes.js';
+import RecipeDetails from '../Screens/RecipeDetails.js';
+
 
 // Stack navigators
 const Stack = createStackNavigator();
@@ -70,6 +72,25 @@ function ContentNavigator() {
           headerLeft: () => <BackButton />,
         }}
       />
+      
+      <Stack.Screen
+        name="Recipes"
+        component={Recipes}
+        options={{
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      
+      <Stack.Screen
+        name="RecipeDetails"
+        component={RecipeDetails}
+        options={{
+          headerTitle: 'Recipe Details',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+
+      
     </Stack.Navigator>
   );
 }

@@ -1,11 +1,12 @@
-import { API_KEY } from '@env'; 
+import { NUTRITION_API_KEY } from '@env';
 
 
 export const fetchFoods = async (query) => {
   try {
     // request URL consturction
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=50&dataType=Foundation,SR%20Legacy&api_key=${API_KEY}`;
-    console.log("Request URL:", url.replace(API_KEY, "API_KEY_HIDDEN"));
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=50&dataType=Foundation,SR%20Legacy&api_key=${NUTRITION_API_KEY}`;
+    console.log("Request URL:", url.replace(NUTRITION_API_KEY, "API_KEY_HIDDEN"));
+    
 
     // Make the API request
     const res = await fetch(url);

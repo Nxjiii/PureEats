@@ -1,16 +1,16 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, FlatList, Dimensions, TouchableOpacity,} from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, ScrollView, FlatList, Dimensions, TouchableOpacity, ImageBackground} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import MetricRingCard from '../components/MetricRingCard'; 
-import { Session } from '@supabase/supabase-js'; 
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 function HomeScreen() {
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
+  const [featuredRecipe, setFeaturedRecipe] = useState(null);
 
 
 const [goals, setGoals] = useState({
@@ -64,7 +64,29 @@ useEffect(() => {
   };
 
   fetchGoals();
+
+
+
+  const fetchFeaturedRecipe = async () => {
+    try {
+      // Get recipes from AsyncStorage
+      const storedData = await AsyncStorage.getItem('recipesData');
+      if (storedData) {
+        const { storedRecipes } = JSON.parse(storedData);
+        if (storedRecipes && storedRecipes.length > 0) {
+          // Get the first recipe
+          setFeaturedRecipe(storedRecipes[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch featured recipe:', err);
+    }
+  };
+
+  fetchGoals();
+  fetchFeaturedRecipe();
 }, []);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,6 +100,9 @@ useEffect(() => {
           onPress={() => navigation.navigate('Logger')}
           activeOpacity={0.9}
         >
+           <View style={styles.macros}>
+            <Text style={styles.macros}>Your macros today:</Text>
+          </View>
      <View style={styles.metricsRow}>
   <MetricRingCard
     label="Calories"
@@ -85,7 +110,7 @@ useEffect(() => {
     goal={goals.calories}
     unit="kcal"
     size="small"
-    onPress={() => navigation.navigate('LoggedMeals')} 
+    onPress={() => navigation.navigate('Logger')} 
   />
   <MetricRingCard
     label="Protein"
@@ -93,7 +118,7 @@ useEffect(() => {
     goal={goals.protein}
     unit="g"
     size="small"
-    onPress={() => navigation.navigate('LoggedMeals')}
+    onPress={() => navigation.navigate('Logger')}
   />
   <MetricRingCard
     label="Carbs"
@@ -101,7 +126,7 @@ useEffect(() => {
     goal={goals.carbs}
     unit="g"
     size="small"
-    onPress={() => navigation.navigate('LoggedMeals')}
+    onPress={() => navigation.navigate('Logger')}
   />
   <MetricRingCard
     label="Fat"
@@ -109,15 +134,43 @@ useEffect(() => {
     goal={goals.fat}
     unit="g"
     size="small"
-    onPress={() => navigation.navigate('LoggedMeals')}
+    onPress={() => navigation.navigate('Logger')}
   />
 </View>
+      
 
-          
           <View style={styles.loggerPrompt}>
             <Text style={styles.loggerText}>Track Your Progress!</Text>
           </View>
         </TouchableOpacity>
+
+
+   {/* SUGGESTED RECIPES */}
+<TouchableOpacity 
+  style={styles.recipePreviewContainer}
+  onPress={() => navigation.navigate('Recipes')}
+  activeOpacity={0.4}
+>
+  <View style={styles.recipeCard}>
+    {featuredRecipe ? (
+      <ImageBackground
+        source={{ uri: featuredRecipe.image }}
+        style={styles.recipeImage}
+        imageStyle={{ borderRadius: 10 }}
+      >
+        <View style={styles.titleOverlay}>
+          <Text style={styles.previewTitle}>Your Recipes Today</Text>
+        </View>
+      </ImageBackground>
+    ) : (
+      <View style={styles.fallbackContainer}>
+        <Text style={styles.previewTitle}>Your Recipes Today</Text>
+        <Text style={styles.recipeCardText}>Recipe 1</Text>
+      </View>
+    )}
+  </View>
+</TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -136,12 +189,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginTop: 24,
-    marginBottom: 50,
+    marginBottom: 20,
     textAlign: 'center',
   },
   metricsContainer: {
     backgroundColor: '#1E1E1E',
-    marginHorizontal: 16,
+    marginHorizontal: 5,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -155,8 +208,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 16,
-  },
+    },
+  macros: { 
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop : 10,
+    },
   loggerPrompt: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -168,7 +229,52 @@ const styles = StyleSheet.create({
   loggerText: {
     color: '#999',
     fontSize: 14,
-  }
+  },
+  recipePreviewContainer: {
+    marginHorizontal: 5,
+    marginTop: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  recipeCard: {
+    height: 180,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  recipeImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-start', 
+  },
+  titleOverlay: {
+    backgroundColor: 'rgba(30, 30, 30, 0.6)', 
+    paddingVertical: 12,
+    width: '100%',
+  },
+  previewTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  fallbackContainer: {
+    backgroundColor: '#1E1E1E',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recipeCardText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingVertical: 6,
+  },
 });
 
 export default HomeScreen;

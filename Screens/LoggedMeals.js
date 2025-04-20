@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, FlatList, Dimen
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
-const CARD_MARGIN = 12;
+const CARD_MARGIN = 16;
 
 const LoggedMeals = () => {
   const navigation = useNavigation();
@@ -12,34 +12,37 @@ const LoggedMeals = () => {
     { id: '1', name: 'Breakfast', calories: 400 },
     { id: '2', name: 'Lunch', calories: 600 },
     { id: '3', name: 'Dinner', calories: 200 },
+    { id: '4', name: 'Snacks', calories: 130 },
   ];
 
   const renderMealCard = ({ item }) => (
     <View style={styles.mealCard}>
-      <Text style={styles.mealText}>{item.name}</Text>
-      <Text style={styles.caloriesText}>{item.calories} kcal</Text>
+      <View style={styles.mealContent}>
+        <Text style={styles.mealText}>{item.name}</Text>
+        <View style={styles.caloriesPill}>
+          <Text style={styles.caloriesText}>{item.calories} kcal</Text>
+        </View>
+      </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.sectionTitle}></Text>
+      <Text style={styles.headerTitle}>Today's Meals</Text>
 
-      {/* Logged Meals List */}
       <FlatList
         data={loggedMeals}
         renderItem={renderMealCard}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: CARD_MARGIN }}
+        contentContainerStyle={styles.listContent}
       />
 
-      {/* Add Food Button */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('Logger')} // Navigate to the food logging page
+        onPress={() => navigation.navigate('Logger')}
       >
-        <Text style={styles.addButtonText}>Add Food</Text>
+        <Text style={styles.addButtonText}>+ Add Food</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -49,48 +52,68 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
-    paddingTop: 20,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 180,
     textAlign: 'center',
+    marginVertical: 80,
+    letterSpacing: 0.5,
+  },
+  listContent: {
+    paddingHorizontal: CARD_MARGIN,
+    paddingBottom: 120,
   },
   mealCard: {
-    width: width - CARD_MARGIN * 2,
-    padding: 16,
     backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    marginBottom: 30,
+    borderRadius: 12,
+    marginBottom: CARD_MARGIN,
+    padding: 0, 
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+  },
+  mealContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
   },
   mealText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
     color: '#FFFFFF',
+    flex: 1,
+  },
+  caloriesPill: {
+    backgroundColor: '#252525',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   caloriesText: {
     fontSize: 14,
-    color: '#B0B0B0',
-    right: -290,
+    fontWeight: '500',
+    color: '#BB86FC',
   },
-
   addButton: {
     backgroundColor: '#BB86FC',
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
-    width: '80%', 
-    alignSelf: 'center',
-    marginBottom: 180,
+    marginHorizontal: CARD_MARGIN,
+    marginBottom: 150,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
-  
   addButtonText: {
-    color: '#fff',
+    color: '#121212',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
 
