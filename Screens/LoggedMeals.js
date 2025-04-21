@@ -1,29 +1,71 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { supabase } from '../lib/supabaseClient';
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
 
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+
 const LoggedMeals = () => {
   const navigation = useNavigation();
+  const [loggedMeals, setLoggedMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const loggedMeals = [
-    { id: '1', name: 'Breakfast', calories: 400 },
-    { id: '2', name: 'Lunch', calories: 600 },
-    { id: '3', name: 'Dinner', calories: 200 },
-    { id: '4', name: 'Snacks', calories: 130 },
-  ];
+  useEffect(() => {
+    const fetchLoggedMeals = async () => {
+      setLoading(true);
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error('User not authenticated', userError);
+        setLoading(false);
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('nutrition_logs')
+        .select('meal_type, calories')
+        .eq('user_id', user.id)
+        .eq('log_date', today);
+
+      if (error) {
+        console.error('Error fetching logs:', error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Sum calories per meal_type
+      const grouped = mealTypes.map((type) => {
+        const total = data
+          .filter((item) => item.meal_type === type)
+          .reduce((sum, item) => sum + (item.calories || 0), 0);
+        return { id: type, name: type, calories: total };
+      });
+
+      setLoggedMeals(grouped);
+      setLoading(false);
+    };
+
+    fetchLoggedMeals();
+  }, []);
 
   const renderMealCard = ({ item }) => (
-    <View style={styles.mealCard}>
+    <TouchableOpacity
+      style={styles.mealCard}
+      onPress={() => navigation.navigate('LoggedFoods', { mealType: item.name })}
+    >
       <View style={styles.mealContent}>
         <Text style={styles.mealText}>{item.name}</Text>
         <View style={styles.caloriesPill}>
           <Text style={styles.caloriesText}>{item.calories} kcal</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -40,7 +82,7 @@ const LoggedMeals = () => {
 
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('Logger')}
+        onPress={() => navigation.navigate('Search')}
       >
         <Text style={styles.addButtonText}>+ Add Food</Text>
       </TouchableOpacity>
@@ -69,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     borderRadius: 12,
     marginBottom: CARD_MARGIN,
-    padding: 0, 
+    padding: 0,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

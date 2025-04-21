@@ -12,7 +12,7 @@ import Search from '../Screens/Search.js';
 import { ActivityIndicator, View } from 'react-native';
 import Recipes from '../Screens/Recipes.js';
 import RecipeDetails from '../Screens/RecipeDetails.js';
-
+import LoggedFoods from '../Screens/LoggedFoods.js';  
 
 // Stack navigators
 const Stack = createStackNavigator();
@@ -90,6 +90,14 @@ function ContentNavigator() {
         }}
       />
 
+      <Stack.Screen
+        name="LoggedFoods"
+        component={LoggedFoods}
+        options={{
+          headerTitle: 'Logged Foods',
+          headerLeft: () => <BackButton />,
+        }}
+      />
       
     </Stack.Navigator>
   );
