@@ -5,7 +5,7 @@ import MainTabs from './MainTabs';
 import AuthStack from './AuthStack';
 import SetupProfileScreen from '../Screens/SetupProfileScreen';
 import Welcome from '../Screens/Welcome.js';
-import LoggedMeals from '../Screens/LoggedMeals';
+import Meals from '../Screens/Meals';
 import BackButton from '../components/BackButton';
 import Logger from '../Screens/Logger'; 
 import Search from '../Screens/Search.js';
@@ -13,7 +13,8 @@ import { ActivityIndicator, View } from 'react-native';
 import Recipes from '../Screens/Recipes.js';
 import RecipeDetails from '../Screens/RecipeDetails.js';
 import LoggedFoods from '../Screens/LoggedFoods.js';  
-
+import SelectMeal from '../Screens/SelectMealForLog.js';
+import FoodDetails from '../Screens/FoodDetails.js';
 // Stack navigators
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
@@ -49,8 +50,8 @@ function ContentNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="LoggedMeals"
-        component={LoggedMeals}
+        name="Meals"
+        component={Meals}
         options={{
           headerTitle: 'Logged Meals',
           headerLeft: () => <BackButton />,
@@ -95,6 +96,22 @@ function ContentNavigator() {
         component={LoggedFoods}
         options={{
           headerTitle: 'Logged Foods',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="SelectMeal"
+        component={SelectMeal}
+        options={{
+          headerTitle: 'Select Meal Type',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="FoodDetails"
+        component={FoodDetails}
+        options={{
+          headerTitle: 'Food Details',
           headerLeft: () => <BackButton />,
         }}
       />

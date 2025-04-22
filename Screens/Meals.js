@@ -8,13 +8,13 @@ const CARD_MARGIN = 16;
 
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
-const LoggedMeals = () => {
+const Meals = () => {
   const navigation = useNavigation();
-  const [loggedMeals, setLoggedMeals] = useState([]);
+  const [Meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLoggedMeals = async () => {
+    const fetchMeals = async () => {
       setLoading(true);
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -47,11 +47,11 @@ const LoggedMeals = () => {
         return { id: type, name: type, calories: total };
       });
 
-      setLoggedMeals(grouped);
+      setMeals(grouped);
       setLoading(false);
     };
 
-    fetchLoggedMeals();
+    fetchMeals();
   }, []);
 
   const renderMealCard = ({ item }) => (
@@ -73,7 +73,7 @@ const LoggedMeals = () => {
       <Text style={styles.headerTitle}>Today's Meals</Text>
 
       <FlatList
-        data={loggedMeals}
+        data={Meals}
         renderItem={renderMealCard}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
@@ -82,7 +82,7 @@ const LoggedMeals = () => {
 
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('Search')}
+        onPress={() => navigation.navigate('SelectMeal')}
       >
         <Text style={styles.addButtonText}>+ Add Food</Text>
       </TouchableOpacity>
@@ -159,4 +159,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoggedMeals;
+export default Meals;

@@ -12,7 +12,7 @@ const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 function Logger(){
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
-  const [loggedMeals, setLoggedMeals] = useState([]);
+  const [Meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [goals, setGoals] = useState({
@@ -67,9 +67,9 @@ function Logger(){
     fetchGoals();
   }, []);
 
-  // Fetch logged meals (from LoggedMeals component)
+  // Fetch logged meals (from Meals component)
   useEffect(() => {
-    const fetchLoggedMeals = async () => {
+    const fetchMeals = async () => {
       setLoading(true);
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -102,11 +102,11 @@ function Logger(){
         return { id: type, name: type, calories: total };
       });
 
-      setLoggedMeals(grouped);
+      setMeals(grouped);
       setLoading(false);
     };
 
-    fetchLoggedMeals();
+    fetchMeals();
   }, []);
 
   // Recently searched foods (replaced with data later)
@@ -155,7 +155,7 @@ function Logger(){
             goal={goals.calories}
             unit="kcal"
             size="small"
-            onPress={() => navigation.navigate('LoggedMeals')} 
+            onPress={() => navigation.navigate('Meals')} 
           />
           <MetricRingCard
             label="Protein"
@@ -163,7 +163,7 @@ function Logger(){
             goal={goals.protein}
             unit="g"
             size="small"
-            onPress={() => navigation.navigate('LoggedMeals')}
+            onPress={() => navigation.navigate('Meals')}
           />
           <MetricRingCard
             label="Carbs"
@@ -171,7 +171,7 @@ function Logger(){
             goal={goals.carbs}
             unit="g"
             size="small"
-            onPress={() => navigation.navigate('LoggedMeals')}
+            onPress={() => navigation.navigate('Meals')}
           />
           <MetricRingCard
             label="Fat"
@@ -179,7 +179,7 @@ function Logger(){
             goal={goals.fat}
             unit="g"
             size="small"
-            onPress={() => navigation.navigate('LoggedMeals')}
+            onPress={() => navigation.navigate('Meals')}
           />
         </View>
 
@@ -187,8 +187,8 @@ function Logger(){
         <View style={styles.logSection}>
           <TouchableOpacity
             style={styles.logButton}
-            onPress={() => navigation.navigate('Search')}>
-            <Text style={styles.logButtonText}>Log Food</Text>
+            onPress={() => navigation.navigate('SelectMeal')}>
+            <Text style={styles.logButtonText}>Add Food</Text>
           </TouchableOpacity>
 
           {/* RECENTLY SEARCHED FOODS */}
@@ -204,10 +204,10 @@ function Logger(){
         </View>
         
         {/* LOGGED MEALS SECTION */}
-        <View style={styles.loggedMealsSection}>
+        <View style={styles.MealsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionSubTitle}>Today's Meals</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('LoggedMeals')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Meals')}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -216,7 +216,7 @@ function Logger(){
             <ActivityIndicator color="#BB86FC" style={styles.loader} />
           ) : (
             <View style={styles.mealsContainer}>
-              {loggedMeals.map((meal) => (
+              {Meals.map((meal) => (
                 <TouchableOpacity
                   key={meal.id}
                   style={styles.mealCard}
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   
   // Logged Meals Section
-  loggedMealsSection: {
+  MealsSection: {
     paddingHorizontal: 20,
   },
   sectionHeader: {

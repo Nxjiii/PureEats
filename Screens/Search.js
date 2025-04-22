@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, ActivityIndicator} from 'react-native';
+import { View, TextInput, FlatList, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import { fetchFoods } from '../Services/nutritionService';
 import FoodResultCard from '../components/FoodResultCard';
+import { useNavigation } from '@react-navigation/native';
 
+const Search = ({ route }) => {
 
-const Search = () => {
   // State for search query input
   const [query, setQuery] = useState('');
 
@@ -13,8 +14,12 @@ const Search = () => {
 
   // loading indicator while fetching
   const [loading, setLoading] = useState(false);
+
   // State to track whether a search has been made yet
   const [searched, setSearched] = useState(false);
+
+  // Navigation hook
+  const navigation = useNavigation();
 
   // Called when user submits a search
   const handleSearch = async () => {
@@ -25,11 +30,6 @@ const Search = () => {
     const data = await fetchFoods(query); 
     setResults(data);     
     setLoading(false);    
-  };
-
-  // Placeholder for logging food item (to Supabase eventually)
-  const handleLog = (item) => {
-    console.log('Logging:', item); // TBR with a acc DB insert
   };
 
   return (
@@ -52,9 +52,16 @@ const Search = () => {
         <FlatList
           data={results}
           keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <FoodResultCard food={item} onLog={() => handleLog(item)} />
-          )}
+          renderItem={({ item }) => ( 
+          <FoodResultCard
+         food={item}
+          onLog={() => navigation.navigate('FoodDetails', { 
+          food: item,
+          mealType: route.params?.mealType // Forward the mealType from route.params
+       })}
+        />
+          
+      )}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
       ) : searched ? (
