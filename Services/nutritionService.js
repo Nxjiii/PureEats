@@ -31,22 +31,40 @@ export const fetchFoods = async (query) => {
         return match?.value || 0;
       };
 
-      // Get the most common portion (prioritize household units)
-      const householdPortion = item.foodPortions?.find(p => p.measureUnit && !p.measureUnit.includes('g')) || 
-                              item.foodPortions?.[0] || 
-                              { amount: 100, modifier: 'g', gramWeight: 100 };
+      // Find portion closest to 100g or use the default portion
+      const closestPortion = item.foodPortions?.reduce((closest, current) => {
+        const currentWeight = current.gramWeight || 100;
+        if (Math.abs(currentWeight - 100) < Math.abs(closest.gramWeight - 100)) {
+          return current;
+        }
+        return closest;
+      }, { amount: 100, modifier: 'g', gramWeight: 100 }) || { amount: 100, modifier: 'g', gramWeight: 100 };
+
+      // Get energy in the correct unit (kcal or kJ)
+      const energyNutrient = nutrients.find((n) =>
+        n.nutrientName && n.nutrientName.toLowerCase().includes('energy')
+      );
+      
+      let energy = energyNutrient?.value || 0;
+      let energyUnit = 'kcal';  // Default to kcal
+      if (energyNutrient?.unitName.toLowerCase() === 'kj') {
+        // Convert kJ to kcal (1 kcal = 4.184 kJ)
+        energy = (energy / 4.184).toFixed(2);
+        energyUnit = 'kcal';  // Set unit to kcal
+      }
 
       return {
         name: item.description,
         fdcId: item.fdcId,
-        calories: getNutrient("energy"),
+        calories: energy,
+        energyUnit: energyUnit,  // Add the energy unit (kcal or kJ)
         protein: getNutrient("protein"),
         fat: getNutrient("total lipid"),
         carbs: getNutrient("carbohydrate"),
         image: null,
-        servingSize: householdPortion.amount,
-        servingSizeUnit: householdPortion.modifier || 'g',
-        gramWeight: householdPortion.gramWeight || householdPortion.amount, // For conversion
+        servingSize: closestPortion.amount,
+        servingSizeUnit: closestPortion.modifier || 'g',
+        gramWeight: closestPortion.gramWeight || closestPortion.amount, // For conversion
         portions: item.foodPortions || []
       };
     });

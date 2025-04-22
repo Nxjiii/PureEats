@@ -1,80 +1,107 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, FlatList, Dimensions, TouchableOpacity, ImageBackground} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import MetricRingCard from '../components/MetricRingCard'; 
+import { SafeAreaView, StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import MetricRingCard from '../components/MetricRingCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 function HomeScreen() {
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
+  const [totals, setTotals] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+  });
+
+  const [goals, setGoals] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+  });
   const [featuredRecipe, setFeaturedRecipe] = useState(null);
 
+  // Fetch user's goals when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchGoalsAndData = async () => {
+        setLoadingGoals(true);
+        setLoadingData(true);
 
-const [goals, setGoals] = useState({
-  calories: 2000,
-  protein: 150,
-  carbs: 250,
-  fat: 70,
-});
+        // Get session to identify user
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-//temportary hardcoded values
-const totals = {
-  calories: 1200,
-  protein: 90,
-  carbs: 160,
-  fat: 50,
-};
+        if (sessionError || !session?.user) {
+          console.error('Session error:', sessionError);
+          setLoadingGoals(false);
+          setLoadingData(false);
+          return;
+        }
 
+        // Fetch user's target goals from 'nutrition_profiles'
+        const { data: goalData, error: goalError } = await supabase
+          .from('nutrition_profiles')
+          .select('target_calories, target_protein, target_carbs, target_fats')
+          .eq('user_id', session.user.id)
+          .single();
 
-useEffect(() => {
-  const fetchGoals = async () => {
-    setLoadingGoals(true);
-    const {
-      data: { session },
-      error: sessionError
-    } = await supabase.auth.getSession();
+        if (goalError) {
+          console.error('Failed to fetch goals:', goalError.message);
+        } else if (goalData) {
+          setGoals({
+            calories: goalData.target_calories,
+            protein: goalData.target_protein,
+            carbs: goalData.target_carbs,
+            fats: goalData.target_fats,
+          });
+        }
 
-    if (sessionError || !session?.user) {
-      console.error('Session error:', sessionError);
-      setLoadingGoals(false);
-      return;
-    }
+        // Fetch today's logged data from 'nutrition_logs'
+        const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
 
-    const { data, error } = await supabase
-      .from('nutrition_profiles')
-      .select('target_calories, target_protein, target_carbs, target_fats')
-      .eq('user_id', session.user.id)
-      .single();
+        const { data: logData, error: logError } = await supabase
+          .from('nutrition_logs')
+          .select('meal_type, calories, protein, carbs, fats')
+          .eq('user_id', session.user.id)
+          .eq('log_date', today);
 
-    if (error) {
-      console.error('Failed to fetch goals:', error.message);
-    } else if (data) {
-      setGoals({
-        calories: data.target_calories,
-        protein: data.target_protein,
-        carbs: data.target_carbs,
-        fat: data.target_fats,
-      });
-    }
+        if (logError) {
+          console.error('Error fetching logs:', logError.message);
+        } else if (logData) {
+          const totalCalories = logData.reduce((sum, item) => sum + (item.calories || 0), 0);
+          const totalProtein = logData.reduce((sum, item) => sum + (item.protein || 0), 0);
+          const totalCarbs = logData.reduce((sum, item) => sum + (item.carbs || 0), 0);
+          const totalFats = logData.reduce((sum, item) => sum + (item.fats || 0), 0);
 
-    setLoadingGoals(false);
-  };
+          setTotals({
+            calories: Math.round(totalCalories),
+            protein: Math.round(totalProtein),
+            carbs: Math.round(totalCarbs),
+            fats: Math.round(totalFats),
+          });
+        }
 
-  fetchGoals();
+        setLoadingGoals(false);
+        setLoadingData(false);
+      };
 
+      fetchGoalsAndData();
+    }, [])
+  );
 
-
+  // Fetch featured recipe
   const fetchFeaturedRecipe = async () => {
     try {
-      // Get recipes from AsyncStorage
       const storedData = await AsyncStorage.getItem('recipesData');
       if (storedData) {
         const { storedRecipes } = JSON.parse(storedData);
         if (storedRecipes && storedRecipes.length > 0) {
-          // Get the first recipe
           setFeaturedRecipe(storedRecipes[0]);
         }
       }
@@ -83,15 +110,15 @@ useEffect(() => {
     }
   };
 
-  fetchGoals();
-  fetchFeaturedRecipe();
-}, []);
-
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchFeaturedRecipe();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-
         {/* METRIC RINGS */}
         <Text style={styles.sectionTitle}>Home</Text>
         
@@ -100,77 +127,73 @@ useEffect(() => {
           onPress={() => navigation.navigate('Logger')}
           activeOpacity={0.9}
         >
-           <View style={styles.macros}>
+          <View style={styles.macros}>
             <Text style={styles.macros}>Your macros today:</Text>
           </View>
-     <View style={styles.metricsRow}>
-  <MetricRingCard
-    label="Calories"
-    value={totals.calories}
-    goal={goals.calories}
-    unit="kcal"
-    size="small"
-    onPress={() => navigation.navigate('Logger')} 
-  />
-  <MetricRingCard
-    label="Protein"
-    value={totals.protein}
-    goal={goals.protein}
-    unit="g"
-    size="small"
-    onPress={() => navigation.navigate('Logger')}
-  />
-  <MetricRingCard
-    label="Carbs"
-    value={totals.carbs}
-    goal={goals.carbs}
-    unit="g"
-    size="small"
-    onPress={() => navigation.navigate('Logger')}
-  />
-  <MetricRingCard
-    label="Fat"
-    value={totals.fat}
-    goal={goals.fat}
-    unit="g"
-    size="small"
-    onPress={() => navigation.navigate('Logger')}
-  />
-</View>
-      
-
+          <View style={styles.metricsRow}>
+            <MetricRingCard
+              label="Calories"
+              value={totals.calories}
+              goal={goals.calories}
+              unit="kcal"
+              size="small"
+              onPress={() => navigation.navigate('Logger')} 
+            />
+            <MetricRingCard
+              label="Protein"
+              value={totals.protein}
+              goal={goals.protein}
+              unit="g"
+              size="small"
+              onPress={() => navigation.navigate('Logger')}
+            />
+            <MetricRingCard
+              label="Carbs"
+              value={totals.carbs}
+              goal={goals.carbs}
+              unit="g"
+              size="small"
+              onPress={() => navigation.navigate('Logger')}
+            />
+            <MetricRingCard
+              label="Fats"
+              value={totals.fats}
+              goal={goals.fats}
+              unit="g"
+              size="small"
+              onPress={() => navigation.navigate('Logger')}
+            />
+          </View>
           <View style={styles.loggerPrompt}>
             <Text style={styles.loggerText}>Track Your Progress!</Text>
           </View>
         </TouchableOpacity>
 
-
-   {/* SUGGESTED RECIPES */}
-<TouchableOpacity 
-  style={styles.recipePreviewContainer}
-  onPress={() => navigation.navigate('Recipes')}
-  activeOpacity={0.4}
->
-  <View style={styles.recipeCard}>
-    {featuredRecipe ? (
-      <ImageBackground
-        source={{ uri: featuredRecipe.image }}
-        style={styles.recipeImage}
-        imageStyle={{ borderRadius: 10 }}
-      >
-        <View style={styles.titleOverlay}>
-          <Text style={styles.previewTitle}>Your Recipes Today</Text>
-        </View>
-      </ImageBackground>
-    ) : (
-      <View style={styles.fallbackContainer}>
-        <Text style={styles.previewTitle}>Your Recipes Today</Text>
-        <Text style={styles.recipeCardText}>Recipe 1</Text>
-      </View>
-    )}
-  </View>
-</TouchableOpacity>
-
+        {/* SUGGESTED RECIPES */}
+        <TouchableOpacity 
+          style={styles.recipePreviewContainer}
+          onPress={() => navigation.navigate('Recipes')}
+          activeOpacity={0.4}
+        >
+          <View style={styles.recipeCard}>
+            {featuredRecipe ? (
+              <ImageBackground
+                source={{ uri: featuredRecipe.image }}
+                style={styles.recipeImage}
+                imageStyle={{ borderRadius: 10 }}
+              >
+                <View style={styles.titleOverlay}>
+                  <Text style={styles.previewTitle}>Your Recipes Today</Text>
+                </View>
+              </ImageBackground>
+            ) : (
+              <View style={styles.fallbackContainer}>
+                <Text style={styles.previewTitle}>Your Recipes Today</Text>
+                <Text style={styles.recipeCardText}>Recipe 1</Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
-    },
+  },
   macros: { 
     flexDirection: 'row',
     justifyContent: 'center',
@@ -217,7 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginTop : 10,
-    },
+  },
   loggerPrompt: {
     flexDirection: 'row',
     justifyContent: 'center',

@@ -1,15 +1,12 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Dimensions, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import MetricRingCard from '../components/MetricRingCard'; 
+import { SafeAreaView, StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import MetricRingCard from '../components/MetricRingCard';
 
-const { width } = Dimensions.get('window');
-const CARD_MARGIN = 16;
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
-function Logger(){
+function Logger() {
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
   const [Meals, setMeals] = useState([]);
@@ -19,95 +16,115 @@ function Logger(){
     calories: 0,
     protein: 0,
     carbs: 0,
-    fat: 0,
+    fats: 0,
   });
   
-  //temporary hardcoded values
-  const totals = {
-    calories: 1200,
-    protein: 90,
-    carbs: 160,
-    fat: 50,
-  };
+  const [totals, setTotals] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+  });
 
-  useEffect(() => {
-    const fetchGoals = async () => {
-      setLoadingGoals(true);
-      const {
-        data: { session },
-        error: sessionError
-      } = await supabase.auth.getSession();
-  
-      if (sessionError || !session?.user) {
-        console.error('Session error:', sessionError);
-        setLoadingGoals(false);
-        return;
-      }
-  
-      const { data, error } = await supabase
+  // Fetch user's goals when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchGoals = async () => {
+        setLoadingGoals(true);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+        if (sessionError || !session?.user) {
+          console.error('Session error:', sessionError);
+          setLoadingGoals(false);
+          return;
+        }
+    
+        const { data, error } = await supabase
         .from('nutrition_profiles')
         .select('target_calories, target_protein, target_carbs, target_fats')
-        .eq('user_id', session.user.id)
-        .single();
+          .eq('user_id', session.user.id)
+          .single();
+    
+        if (error) {
+          console.error('Failed to fetch goals:', error.message);
+        } else if (data) {
+          setGoals({
+            calories: data.target_calories,
+            protein: data.target_protein,
+            carbs: data.target_carbs,
+            fats: data.target_fats,
+          });
+        }
+    
+        setLoadingGoals(false);
+      };
   
-      if (error) {
-        console.error('Failed to fetch goals:', error.message);
-      } else if (data) {
-        setGoals({
-          calories: data.target_calories,
-          protein: data.target_protein,
-          carbs: data.target_carbs,
-          fat: data.target_fats,
+      fetchGoals();
+    }, [])
+  );
+
+  // Fetch logged meals when the screen is focused and calculate totals
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchMeals = async () => {
+        setLoading(true);
+  
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+        if (userError || !user) {
+          console.error('User not authenticated', userError);
+          setLoading(false);
+          return;
+        }
+  
+        const today = new Date().toISOString().split('T')[0];
+  
+        const { data, error } = await supabase
+          .from('nutrition_logs')
+          .select('meal_type, calories, protein, carbs, fats')
+          .eq('user_id', user.id)
+          .eq('log_date', today);
+  
+        if (error) {
+          console.error('Error fetching logs:', error.message);
+          setLoading(false);
+          return;
+        }
+  
+        // Sum calories, protein, carbs, and fats per meal_type
+        const grouped = mealTypes.map((type) => {
+          const totalCalories = data.filter((item) => item.meal_type === type)
+                                    .reduce((sum, item) => sum + (item.calories || 0), 0);
+          const totalProtein = data.filter((item) => item.meal_type === type)
+                                   .reduce((sum, item) => sum + (item.protein || 0), 0);
+          const totalCarbs = data.filter((item) => item.meal_type === type)
+                                  .reduce((sum, item) => sum + (item.carbs || 0), 0);
+          const totalFats = data.filter((item) => item.meal_type === type)
+                                 .reduce((sum, item) => sum + (item.fats || 0), 0);
+
+          return { id: type, name: type, calories: totalCalories, protein: totalProtein, carbs: totalCarbs, fats: totalFats };
         });
-      }
   
-      setLoadingGoals(false);
-    };
+        setMeals(grouped);
+        setLoading(false);
   
-    fetchGoals();
-  }, []);
+        // Calculate total macros for the day
+        const totalCalories = data.reduce((sum, item) => sum + (item.calories || 0), 0);
+        const totalProtein = data.reduce((sum, item) => sum + (item.protein || 0), 0);
+        const totalCarbs = data.reduce((sum, item) => sum + (item.carbs || 0), 0);
+        const totalFats = data.reduce((sum, item) => sum + (item.fats || 0), 0);
 
-  // Fetch logged meals (from Meals component)
-  useEffect(() => {
-    const fetchMeals = async () => {
-      setLoading(true);
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        console.error('User not authenticated', userError);
-        setLoading(false);
-        return;
-      }
-
-      const today = new Date().toISOString().split('T')[0];
-
-      const { data, error } = await supabase
-        .from('nutrition_logs')
-        .select('meal_type, calories')
-        .eq('user_id', user.id)
-        .eq('log_date', today);
-
-      if (error) {
-        console.error('Error fetching logs:', error.message);
-        setLoading(false);
-        return;
-      }
-
-      // Sum calories per meal_type
-      const grouped = mealTypes.map((type) => {
-        const total = data
-          .filter((item) => item.meal_type === type)
-          .reduce((sum, item) => sum + (item.calories || 0), 0);
-        return { id: type, name: type, calories: total };
-      });
-
-      setMeals(grouped);
-      setLoading(false);
-    };
-
-    fetchMeals();
-  }, []);
+        setTotals({
+          calories: Math.round(totalCalories),
+          protein: Math.round(totalProtein),
+          carbs: Math.round(totalCarbs),
+          fats: Math.round(totalFats),
+        });
+      };
+  
+      fetchMeals();
+    }, [])
+  );
 
   // Recently searched foods (replaced with data later)
   const recentlySearchedFoods = [
@@ -174,9 +191,9 @@ function Logger(){
             onPress={() => navigation.navigate('Meals')}
           />
           <MetricRingCard
-            label="Fat"
-            value={totals.fat}
-            goal={goals.fat}
+            label="Fats"
+            value={totals.fats}
+            goal={goals.fats}
             unit="g"
             size="small"
             onPress={() => navigation.navigate('Meals')}
@@ -237,6 +254,7 @@ function Logger(){
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -373,7 +391,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#BB86FC',
   },
-
 });
 
 export default Logger;
