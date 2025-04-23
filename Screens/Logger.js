@@ -26,7 +26,7 @@ function Logger() {
     fats: 0,
   });
 
-  // Fetch user's goals when the screen is focused
+  // Fetch user's goals when on screen
   useFocusEffect(
     React.useCallback(() => {
       const fetchGoals = async () => {
@@ -63,7 +63,7 @@ function Logger() {
     }, [])
   );
 
-  // Fetch logged meals when the screen is focused and calculate totals
+  // Fetch logged meals when on screen and calculate totals
   useFocusEffect(
     React.useCallback(() => {
       const fetchMeals = async () => {

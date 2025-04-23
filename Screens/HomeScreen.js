@@ -5,6 +5,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import MetricRingCard from '../components/MetricRingCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 function HomeScreen() {
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
@@ -16,8 +17,8 @@ function HomeScreen() {
     fats: 0,
   });
 
-  const [goals, setGoals] = useState({
-    calories: 0,
+  const [goals, setGoals] = useState({   
+    calories: 0, 
     protein: 0,
     carbs: 0,
     fats: 0,
@@ -55,10 +56,10 @@ function HomeScreen() {
           console.error('Failed to fetch goals:', goalError.message);
         } else if (goalData) {
           setGoals({
-            calories: goalData.target_calories,
-            protein: goalData.target_protein,
-            carbs: goalData.target_carbs,
-            fats: goalData.target_fats,
+            calories: goalData.target_calories || 2000,
+            protein: goalData.target_protein || 120,
+            carbs: goalData.target_carbs || 200,
+            fats: goalData.target_fats || 60,
           });
         }
 
@@ -73,11 +74,11 @@ function HomeScreen() {
 
         if (logError) {
           console.error('Error fetching logs:', logError.message);
-        } else if (logData) {
-          const totalCalories = logData.reduce((sum, item) => sum + (item.calories || 0), 0);
-          const totalProtein = logData.reduce((sum, item) => sum + (item.protein || 0), 0);
-          const totalCarbs = logData.reduce((sum, item) => sum + (item.carbs || 0), 0);
-          const totalFats = logData.reduce((sum, item) => sum + (item.fats || 0), 0);
+        } else if (logData && logData.length > 0) {
+          const totalCalories = logData.reduce((sum, item) => sum + (Number(item.calories) || 0), 0);
+          const totalProtein = logData.reduce((sum, item) => sum + (Number(item.protein) || 0), 0);
+          const totalCarbs = logData.reduce((sum, item) => sum + (Number(item.carbs) || 0), 0);
+          const totalFats = logData.reduce((sum, item) => sum + (Number(item.fats) || 0), 0);
 
           setTotals({
             calories: Math.round(totalCalories),
@@ -127,8 +128,8 @@ function HomeScreen() {
           onPress={() => navigation.navigate('Logger')}
           activeOpacity={0.9}
         >
-          <View style={styles.macros}>
-            <Text style={styles.macros}>Your macros today:</Text>
+          <View style={styles.macrosContainer}>
+            <Text style={styles.macrosText}>Your macros today:</Text>
           </View>
           <View style={styles.metricsRow}>
             <MetricRingCard
@@ -232,14 +233,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
   },
-  macros: { 
+  macrosContainer: { 
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 10,
+  },
+  macrosText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop : 10,
   },
   loggerPrompt: {
     flexDirection: 'row',
