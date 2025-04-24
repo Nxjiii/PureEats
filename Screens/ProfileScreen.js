@@ -1,18 +1,24 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useState} from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabaseClient';
 
 function ProfileScreen() {
   const navigation = useNavigation();
 
+
+     //Logging out
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Logout failed:', error.message);
     }
-
   };
+
+
+  //Account deletion
+  //gonna host separate function for this and call it in the button
 
   return (
     <SafeAreaView style={styles.container}>

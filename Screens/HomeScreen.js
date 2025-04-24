@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { SafeAreaView, StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import MetricRingCard from '../components/MetricRingCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -120,9 +121,37 @@ function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* METRIC RINGS */}
+
+
+        {/* HEADER AND PROFILE ICON */}
+        <View style={styles.headerRow}>
         <Text style={styles.sectionTitle}>Home</Text>
         
+        <TouchableOpacity
+        style={styles.ProfileButton}
+        onPress={() => navigation.navigate('Profile')}
+        activeOpacity={0.4}>
+       <Svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="white"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round">
+      <Path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <Circle cx="12" cy="7" r="4" />
+    </Svg>
+
+  </TouchableOpacity>
+</View>
+        
+
+
+
+                {/* METRIC RINGS */}
         <TouchableOpacity 
           style={styles.metricsContainer} 
           onPress={() => navigation.navigate('Logger')}
@@ -170,7 +199,9 @@ function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* SUGGESTED RECIPES */}
+
+
+              {/* SUGGESTED RECIPES */}
         <TouchableOpacity 
           style={styles.recipePreviewContainer}
           onPress={() => navigation.navigate('Recipes')}
@@ -195,6 +226,7 @@ function HomeScreen() {
             )}
           </View>
         </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -204,18 +236,42 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#121212',
     flex: 1,
-  },
+  }, 
   scrollContainer: {
     paddingBottom: 100,
   },
+  headerRow: {
+    height: 45,
+    marginTop: 24,
+    marginBottom: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 24,
-    marginBottom: 20,
+    position: 'absolute',
+    alignSelf: 'center',
+    left: 0,
+    right: 0,
     textAlign: 'center',
   },
+  
+  ProfileButton: {
+    position: 'absolute',
+    right: 16,
+    top: 0,
+    padding: 6,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+
   metricsContainer: {
     backgroundColor: '#1E1E1E',
     marginHorizontal: 5,

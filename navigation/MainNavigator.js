@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import MainTabs from './MainTabs';
 import AuthStack from './AuthStack';
 import SetupProfileScreen from '../Screens/SetupProfileScreen';
+import ProfileScreen from '../Screens/ProfileScreen.js';  
 import Welcome from '../Screens/Welcome.js';
 import Meals from '../Screens/Meals';
 import BackButton from '../components/BackButton';
@@ -49,6 +50,16 @@ function ContentNavigator() {
         component={MainTabs}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          headerTitle: 'Profile',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+
       <Stack.Screen
         name="Meals"
         component={Meals}
@@ -57,6 +68,7 @@ function ContentNavigator() {
           headerLeft: () => <BackButton />,
         }}
       />
+
       <Stack.Screen
         name="Logger"
         component={Logger}
@@ -65,6 +77,7 @@ function ContentNavigator() {
           headerLeft: () => <BackButton />,
         }}
       />
+
       <Stack.Screen
         name="Search"
         component={Search}
@@ -99,6 +112,7 @@ function ContentNavigator() {
           headerLeft: () => <BackButton />,
         }}
       />
+     
       <Stack.Screen
         name="SelectMeal"
         component={SelectMeal}
@@ -107,6 +121,7 @@ function ContentNavigator() {
           headerLeft: () => <BackButton />,
         }}
       />
+    
       <Stack.Screen
         name="FoodDetails"
         component={FoodDetails}
