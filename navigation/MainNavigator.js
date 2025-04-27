@@ -20,7 +20,6 @@ import FoodDetails from '../Screens/FoodDetails.js';
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
 
-// Common header styling for dark theme
 const darkHeaderStyle = {
   headerStyle: {
     backgroundColor: '#121212',
