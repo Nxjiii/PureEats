@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, View, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabaseClient';
 
@@ -9,6 +9,9 @@ function ProfileScreen() {
   const [nutritionProfile, setNutritionProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+
+  //display user profile and nutrition data
   const fetchProfileData = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -16,8 +19,6 @@ function ProfileScreen() {
         console.error('User fetch error:', userError.message);
         return;
       }
-
-      console.log('User ID:', user.id);
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -28,7 +29,6 @@ function ProfileScreen() {
       if (profileError) {
         console.error('Profile fetch error:', profileError.message);
       } else {
-        console.log('Profile Data:', profileData);
         setProfile(profileData || {});
       }
 
@@ -41,14 +41,13 @@ function ProfileScreen() {
       if (nutritionError) {
         console.error('Nutrition fetch error:', nutritionError.message);
       } else {
-        console.log('Nutrition Data:', nutritionData);
         setNutritionProfile(nutritionData || {});
       }
 
     } catch (error) {
       console.error('Unexpected error:', error);
     } finally {
-      setLoading(false); // <-- important!
+      setLoading(false);
     }
   };
 
@@ -56,6 +55,8 @@ function ProfileScreen() {
     fetchProfileData();
   }, []);
 
+
+  //logout function
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -105,30 +106,91 @@ function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {profile && (
-        <>
-          <Text style={styles.infoText}>Full Name: {profile.full_name}</Text>
-          <Text style={styles.infoText}>Username: {profile.username}</Text>
-        </>
-      )}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.profileHeader}>
+          <Text style={styles.headerText}>Profile</Text>
+        </View>
 
-      {nutritionProfile && (
-        <>
-          <Text style={styles.infoText}>Allergies: {nutritionProfile.allergies || 'None'}</Text>
-          <Text style={styles.infoText}>Target Calories: {nutritionProfile.target_calories}</Text>
-          <Text style={styles.infoText}>Target Carbs: {nutritionProfile.target_carbs}g</Text>
-          <Text style={styles.infoText}>Target Fats: {nutritionProfile.target_fats}g</Text>
-          <Text style={styles.infoText}>Target Protein: {nutritionProfile.target_protein}g</Text>
-        </>
-      )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Full Name</Text>
+              <Text style={styles.infoValue}>{profile?.full_name || 'Not set'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Username</Text>
+              <Text style={styles.infoValue}>{profile?.username || 'Not set'}</Text>
+            </View>
+          </View>
+        </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
+        {nutritionProfile && (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>Your Targets</Text>
+    
+    <View style={styles.infoCard}>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Allergies</Text>
+        <Text style={styles.infoValue}>
+        {nutritionProfile.allergies && nutritionProfile.allergies.length > 0 ? nutritionProfile.allergies.join(', ') : 'None'}
+        </Text>
+      </View>
+      
+      <View style={styles.macrosContainer}>
+        <View style={[styles.macroPill, styles.caloriesPill]}>
+          <Text style={styles.macroLabel}>Calories</Text>
+          <Text style={styles.macroValue}>
+            {nutritionProfile.target_calories ? `${nutritionProfile.target_calories}cal` : 'Not set'}
+          </Text>
+        </View>
+        
+        <View style={styles.macroPill}>
+          <Text style={styles.macroLabel}>Carbs</Text>
+          <Text style={styles.macroValue}>{nutritionProfile.target_carbs || '0'}g</Text>
+        </View>
+        
+        <View style={styles.macroPill}>
+          <Text style={styles.macroLabel}>Protein</Text>
+          <Text style={styles.macroValue}>{nutritionProfile.target_protein || '0'}g</Text>
+        </View>
+        
+        <View style={styles.macroPill}>
+          <Text style={styles.macroLabel}>Fats</Text>
+          <Text style={styles.macroValue}>{nutritionProfile.target_fats || '0'}g</Text>
+        </View>
+      </View>
+    </View>
+  </View>
+)}
 
-      <TouchableOpacity style={styles.DeleteButton} onPress={confirmDelete}>
-        <Text style={styles.logoutText}>Delete Account</Text>
-      </TouchableOpacity>
+       <View style={styles.buttonsContainer}>
+       <TouchableOpacity 
+      style={[styles.button, styles.editButton]}
+      onPress={() => navigation.navigate('EditProfile')}
+     >
+    <Text style={styles.buttonText}>Edit Profile</Text>
+    </TouchableOpacity>
+  
+    <View style={styles.divider} />
+  
+    <TouchableOpacity 
+    style={[styles.button, styles.logoutButton]} 
+    onPress={handleLogout}
+    >
+    <Text style={styles.buttonText}>Logout</Text>
+    </TouchableOpacity>
+  
+  <View style={styles.divider} />
+  
+  <TouchableOpacity 
+    style={[styles.button, styles.deleteButton]} 
+    onPress={confirmDelete}
+    >
+    <Text style={[styles.buttonText, styles.deleteText]}>Delete Account</Text>
+  </TouchableOpacity>
+  </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -136,34 +198,133 @@ function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#121212',
-    paddingHorizontal: 20,
   },
-  infoText: {
-    color: '#E0E0E0',
-    fontSize: 16,
-    marginVertical: 4,
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
   },
-  logoutButton: {
+  profileHeader: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  headerText: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '600',
+  },
+  section: {
+    marginBottom: 25,
+  },
+  sectionTitle: {
+    color: '#BB86FC',
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 12,
+    paddingLeft: 8,
+  },
+  infoCard: {
     backgroundColor: '#1E1E1E',
-    paddingHorizontal: 20,
+    borderRadius: 12,
+    padding: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 30,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D2D',
   },
-  logoutText: {
-    color: '#E0E0E0',
+  infoRowLast: {
+    borderBottomWidth: 0,
+  },
+  infoLabel: {
+    color: '#A0A0A0',
+    fontSize: 15,
+  },
+  infoValue: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    flexWrap: 'wrap',
+  },
+  macroPill: {
+    backgroundColor: '#2D2D2D',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    minWidth: '15%',
+    marginBottom: 10,
+  },
+  caloriesPill: {
+    backgroundColor: '#2D2D2D',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    minWidth: '15%',
+    marginBottom: 10,
+  },
+  macroLabel: {
+    color: '#BB86FC',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  macroValue: {
+    color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+    marginTop: 4,
   },
-  DeleteButton: {
-    backgroundColor: '#D32F2F',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
-    marginTop: 20,
-  },
+buttonsContainer: {
+  marginTop: 24,
+  borderTopWidth: 1,
+  borderTopColor: '#2A2A2A',
+  paddingTop: 12,
+},
+button: {
+  borderRadius: 6,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 0,
+  backgroundColor: 'transparent',
+  alignSelf: 'center',
+  minWidth: '60%',
+},
+editButton: {
+  borderWidth: 1,
+  borderColor: '#3A3A3A',
+},
+logoutButton: {
+  borderWidth: 1,
+  borderColor: '#3A3A3A',
+},
+deleteButton: {
+  borderWidth: 1,
+  borderColor: '#3A3A3A',
+},
+buttonText: {
+  color: '#FFFFFF',
+  fontSize: 14,
+  fontWeight: '500',
+  letterSpacing: 0.5,
+},
+deleteText: {
+  color: '#FF5252',
+},
+divider: {
+  height: 1,
+  backgroundColor: '#2A2A2A',
+  marginVertical: 6,
+},
 });
 
 export default ProfileScreen;
