@@ -16,6 +16,10 @@ import RecipeDetails from '../Screens/RecipeDetails.js';
 import LoggedFoods from '../Screens/LoggedFoods.js';  
 import SelectMeal from '../Screens/SelectMealForLog.js';
 import FoodDetails from '../Screens/FoodDetails.js';
+import EditProfile from '../Screens/EditProfile.js';
+import Recalculate from '../Screens/Recalculate.js';
+
+
 // Stack navigators
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
@@ -31,6 +35,8 @@ const darkHeaderStyle = {
   },
 };
 
+
+
 // Auth flow navigator
 function AuthNavigator() {
   return (
@@ -39,6 +45,8 @@ function AuthNavigator() {
     </Stack.Navigator>
   );
 }
+
+
 
 // Main content navigator (after auth + profile setup)
 function ContentNavigator() {
@@ -55,6 +63,24 @@ function ContentNavigator() {
         component={ProfileScreen}
         options={{
           headerTitle: 'Profile',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfile}
+        options={{
+          headerTitle: 'Edit Profile',
+          headerLeft: () => <BackButton />,
+        }}
+      />
+
+      <Stack.Screen
+        name="Recalculate"
+        component={Recalculate}
+        options={{
+          headerTitle: 'Recalculate',
           headerLeft: () => <BackButton />,
         }}
       />
@@ -174,7 +200,7 @@ export default function MainNavigator() {
         return false;
       }
   
-      // Check if profile data is complete - removed welcome_complete check
+      // Check if profile data is complete
       return (
         (profileData.profile_complete || Boolean(
           profileData.username &&

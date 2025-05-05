@@ -11,6 +11,7 @@ function HomeScreen() {
   const navigation = useNavigation();
   const [loadingGoals, setLoadingGoals] = useState(true);
   const [loadingData, setLoadingData] = useState(true);
+  const [username, setUsername] = useState('');
   const [totals, setTotals] = useState({
     calories: 0,
     protein: 0,
@@ -46,7 +47,21 @@ function HomeScreen() {
           return;
         }
 
-        // Fetch user's target goals from 'nutrition_profiles'
+        // Fetch username
+        const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profileError) {
+        console.error('Error fetching username:', profileError.message);
+      } else if (profileData) {
+        setUsername(profileData.username || '');
+      }
+
+
+        // Fetch user's target goals
         const { data: goalData, error: goalError } = await supabase
           .from('nutrition_profiles')
           .select('target_calories, target_protein, target_carbs, target_fats')
@@ -146,10 +161,15 @@ function HomeScreen() {
     </Svg>
 
   </TouchableOpacity>
-</View>
+  </View>
         
 
-
+        {/* WELCOME MESSAGE */}
+      {username ? (
+       <View style={{ marginTop: 20, marginBottom: 10 }}>
+      <Text style={styles.welcomeText}>Welcome, {username}.</Text>
+      </View>
+      ) : null}
 
                 {/* METRIC RINGS */}
         <TouchableOpacity 
@@ -243,10 +263,16 @@ const styles = StyleSheet.create({
   headerRow: {
     height: 45,
     marginTop: 24,
-    marginBottom: 15,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 30,
   },
   
   sectionTitle: {

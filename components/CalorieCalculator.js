@@ -6,20 +6,26 @@
 
 const CalorieCalculator = {
   /**
-   * Main function to compute maintenance and all goal/intensity options
-   * @param {Object} userData - User metrics for calculation
+   * Main function to get maintenance and  goal/intensity options
+   * @param {Object} userData - details for calculation
    * @returns {Object} All calorie/macro targets and recommended goal
    */
   calculate(userData) {
     const { gender, age, height, weight, activityLevel } = userData;
 
-    // --- Step 1: Calculating BMR using Mifflin-St Jeor Equation ---
-    let bmr;
-    if (gender === 'male') {
-      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-    } else {
-      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-    }
+
+
+  // --- Step 1: Calculating BMR using Mifflin-St Jeor Equation ---
+let bmr;
+if (gender === 'male') {
+  bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+} else if (gender === 'female') {
+  bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+} else if (gender === 'other') {
+  // Average of male and female constants
+  bmr = 10 * weight + 6.25 * height - 5 * age + (5 - 161) / 2;
+}
+
 
     // --- Step 2: Apply Activity Multiplier ---
     const activityMultipliers = {
@@ -31,6 +37,7 @@ const CalorieCalculator = {
     };
 
     const tdee = Math.round(bmr * activityMultipliers[activityLevel]);
+
 
     // --- Step 3: BMI & Recommended Goal ---
     const heightInM = height / 100;
@@ -45,7 +52,8 @@ const CalorieCalculator = {
       recommendedGoal = 'Maintain';
     }
 
-    // --- Step 4: Maintenance Macros (default 30/40/30 split) ---
+
+    // --- Step 4: Maintenance Macros ( 30/40/30 split) ---
     const maintenance = this._calculateMacros(tdee, 0.3, 0.4, 0.3, weight);
 
     // --- Step 5: All Goal/Intensity Adjustments ---
@@ -68,6 +76,7 @@ const CalorieCalculator = {
     };
   },
 
+  
   /**
    * Private helper: Adjust macros for goal and intensity
    */

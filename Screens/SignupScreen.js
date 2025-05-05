@@ -5,12 +5,15 @@ import { supabase } from '../lib/supabaseClient';
 function SignupScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [signupComplete, setSignupComplete] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [emailScale] = useState(new Animated.Value(1));
   const [passwordScale] = useState(new Animated.Value(1));
+  const [confirmPasswordScale] = useState(new Animated.Value(1));
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
 
   const animateInput = (scaleValue) => {
     Animated.spring(scaleValue, {
@@ -28,12 +31,31 @@ function SignupScreen({ navigation }) {
     }).start();
   };
 
+
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    setPasswordsMatch(text === confirmPassword);
+  };
+
+  const handleConfirmPasswordChange = (text) => {
+    setConfirmPassword(text);
+    setPasswordsMatch(text === password);
+  };
+
+  // Function to handle signup process
   const handleSignup = async () => {
     setLoading(true);
     setErrorMessage('');
     
-    if (!email || !password) {
+    if (!email || !password || !confirmPassword) {
       setErrorMessage('Please fill in all fields.');
+      setLoading(false);
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
       setLoading(false);
       return;
     }
@@ -44,19 +66,16 @@ function SignupScreen({ navigation }) {
         password,
         options: {
           data: {
-            isNewUser: true // Set metadata to indicate this is a new user
+            isNewUser: true
           }
         }
       });
       
       if (error) {
-        // Display error and don't switch to confirmation screen
         setErrorMessage(error.message);
       } else if (data.user && !data.user.identities?.length) {
-        // This indicates the email is already registered
         setErrorMessage('This email is already registered. Please try logging in instead.');
       } else if (data.user) {
-        // Only show confirmation if signup was successful
         setSignupComplete(true);
       } else {
         setErrorMessage('Signup failed. Please try again.');
@@ -71,7 +90,7 @@ function SignupScreen({ navigation }) {
   const handleConfirmation = async () => {
     setConfirmLoading(true);
     try {
-      // Attempt to sign in with the provided credentials
+      // Attempt to sign in with the provided detials
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -89,7 +108,6 @@ function SignupScreen({ navigation }) {
         }
       } else {
         // Successfully signed in, which means the email was confirmed
-        // MainNavigator will detect the auth state change and redirect appropriately
       }
     } catch (error) {
       setErrorMessage('Failed to verify confirmation status. Please try again.');
@@ -102,8 +120,13 @@ function SignupScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
       
+      
       {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
       
+
+
+      {/* Email Input */} 
+
       {!signupComplete ? (
         <>
           <Animated.View style={[styles.inputWrapper, { transform: [{ scaleX: emailScale }, { scaleY: emailScale }] }]}>
@@ -119,7 +142,11 @@ function SignupScreen({ navigation }) {
               onBlur={() => resetInput(emailScale)}
             />
           </Animated.View>
+
+
+
           
+          {/* Password Input */}
           <Animated.View style={[styles.inputWrapper, { transform: [{ scaleX: passwordScale }, { scaleY: passwordScale }] }]}>
             <TextInput
               style={styles.input}
@@ -127,17 +154,51 @@ function SignupScreen({ navigation }) {
               placeholderTextColor="#A0A0A0"
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               autoCapitalize="none"
               onFocus={() => animateInput(passwordScale)}
               onBlur={() => resetInput(passwordScale)}
             />
           </Animated.View>
           
+
+
+
+        {/* Confirm Password Input */}
+          <Animated.View style={[styles.inputWrapper, { 
+            transform: [{ scaleX: confirmPasswordScale }, { scaleY: confirmPasswordScale }],
+            borderColor: confirmPassword && passwordsMatch ? '#4CAF50' : '#1E1E1E',
+            borderWidth: 1,
+            borderRadius: 20
+          }]}>
+            <TextInput
+              style={[styles.input, { paddingHorizontal: 8 }]}
+              placeholder="Confirm Password"
+              placeholderTextColor="#A0A0A0"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={handleConfirmPasswordChange}
+              autoCapitalize="none"
+              onFocus={() => animateInput(confirmPasswordScale)}
+              onBlur={() => resetInput(confirmPasswordScale)}
+            />
+          </Animated.View>
+
+
+
+           {/* Password Matching Indicator */}
+           {confirmPassword.length > 0 && passwordsMatch && (
+            <Text style={styles.matchText}>Passwords match</Text>
+          )}
+
+
+
+
+           {/* Sign up button */}
           <TouchableOpacity 
             style={styles.signUpButton}
             onPress={handleSignup}
-            disabled={loading}
+            disabled={loading || (password !== confirmPassword)}
           >
             {loading ? (
               <Text style={styles.signUpButtonText}>Signing Up...</Text>
@@ -150,6 +211,8 @@ function SignupScreen({ navigation }) {
             <Text style={styles.returnToLoginText}>Return to Login</Text>
           </TouchableOpacity>
         </>
+    
+
       ) : (
         <View style={styles.confirmationContainer}>
           <Text style={styles.confirmationText}>
@@ -197,6 +260,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     width: '80%',
     marginBottom: 15,
+    borderRadius: 20,
   },
   input: {
     height: 40,
@@ -264,6 +328,15 @@ const styles = StyleSheet.create({
     color: '#BB86FC',
     fontSize: 16,
   },
+  matchText: {
+    color: '#4CAF50',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+    marginLeft: '10%',
+  },
+
 });
 
 export default SignupScreen;

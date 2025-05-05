@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, View, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, View, ScrollView, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabaseClient';
 
@@ -8,10 +8,13 @@ function ProfileScreen() {
   const [profile, setProfile] = useState(null);
   const [nutritionProfile, setNutritionProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [password, setPassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
 
+  //---------------------------fetch user profile and nutrition data-------------------------
 
-  //display user profile and nutrition data
   const fetchProfileData = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -26,11 +29,15 @@ function ProfileScreen() {
         .eq('id', user.id)
         .single();
 
+      const completeProfile = {
+        ...(profileData || {}), 
+        email: user.email // Add email from auth
+      };
+
       if (profileError) {
         console.error('Profile fetch error:', profileError.message);
-      } else {
-        setProfile(profileData || {});
-      }
+      } 
+      setProfile(completeProfile); // combined profile both from auth and db
 
       const { data: nutritionData, error: nutritionError } = await supabase
         .from('nutrition_profiles')
@@ -50,13 +57,15 @@ function ProfileScreen() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchProfileData();
   }, []);
 
 
-  //logout function
+
+
+
+  //---------------------------logout function----------------------------------
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -64,9 +73,31 @@ function ProfileScreen() {
     }
   };
 
+
+
+
+
+  //---------------------------delete account function-------------------------
   const handleDeleteAccount = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+
+    setDeleting(true);
     try {
+      // First verify password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: profile?.email,
+        password: password,
+      });
+
+      if (authError) {
+        Alert.alert('Error', 'Incorrect password');
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
       const res = await fetch(`https://delete-gt53.onrender.com/admin/delete-user/${user.id}`, {
         method: 'DELETE',
       });
@@ -82,6 +113,10 @@ function ProfileScreen() {
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to delete account');
+    } finally {
+      setDeleting(false);
+      setPassword('');
+      setShowPasswordConfirm(false);
     }
   };
 
@@ -91,18 +126,14 @@ function ProfileScreen() {
       'Are you sure you want to delete your account? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: handleDeleteAccount },
+        { 
+          text: 'Continue', 
+          onPress: () => setShowPasswordConfirm(true) 
+        },
       ]
     );
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#BB86FC" />
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -163,11 +194,10 @@ function ProfileScreen() {
     </View>
   </View>
 )}
-
-       <View style={styles.buttonsContainer}>
-       <TouchableOpacity 
-      style={[styles.button, styles.editButton]}
-      onPress={() => navigation.navigate('EditProfile')}
+   <View style={styles.buttonsContainer}>
+     <TouchableOpacity 
+    style={[styles.button, styles.editButton]}
+    onPress={() => navigation.navigate('EditProfile')}
      >
     <Text style={styles.buttonText}>Edit Profile</Text>
     </TouchableOpacity>
@@ -190,10 +220,51 @@ function ProfileScreen() {
     <Text style={[styles.buttonText, styles.deleteText]}>Delete Account</Text>
   </TouchableOpacity>
   </View>
+  
+  {showPasswordConfirm && (
+      <View style={styles.passwordModal}>
+      <View style={styles.passwordContainer}>
+       <Text style={styles.passwordTitle}>Confirm Password</Text>
+      <TextInput
+          style={styles.passwordInput}
+          placeholder="Enter your password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          autoFocus
+          />
+          
+        <View style={styles.passwordButtons}>
+        <TouchableOpacity 
+        style={[styles.passwordButton, styles.cancelButton]}
+            onPress={() => {
+            setPassword('');
+            setShowPasswordConfirm(false);
+              }}
+              >          
+        <Text style={styles.passwordButtonText}>Cancel</Text>
+        </TouchableOpacity>
+
+         <TouchableOpacity 
+              style={[styles.passwordButton, styles.confirmButton]}
+              onPress={handleDeleteAccount}
+              disabled={deleting}
+                >
+                  {deleting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.passwordButtonText}>Confirm</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+     
 
 const styles = StyleSheet.create({
   container: {
@@ -289,7 +360,7 @@ buttonsContainer: {
   paddingTop: 12,
 },
 button: {
-  borderRadius: 6,
+  borderRadius: 20,
   paddingVertical: 12,
   paddingHorizontal: 24,
   alignItems: 'center',
@@ -324,6 +395,56 @@ divider: {
   height: 1,
   backgroundColor: '#2A2A2A',
   marginVertical: 6,
+},
+passwordModal: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 100,
+},
+passwordContainer: {
+  backgroundColor: '#1E1E1E',
+  padding: 20,
+  borderRadius: 10,
+  width: '80%',
+},
+passwordTitle: {
+  color: '#E0E0E0',
+  fontSize: 18,
+  marginBottom: 15,
+  textAlign: 'center',
+},
+passwordInput: {
+  backgroundColor: '#121212',
+  color: '#E0E0E0',
+  padding: 12,
+  borderRadius: 5,
+  marginBottom: 15,
+},
+passwordButtons: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+},
+passwordButton: {
+  padding: 12,
+  borderRadius: 5,
+  width: '48%',
+  alignItems: 'center',
+},
+cancelButton: {
+  backgroundColor: '#333',
+},
+confirmButton: {
+  backgroundColor: '#BB86FC',
+},
+passwordButtonText: {
+  color: '#FFF',
+  fontWeight: '500',
 },
 });
 

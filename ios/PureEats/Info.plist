@@ -50,8 +50,12 @@
     <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string>myapp</string> <!-- Replace "myapp" with your custom URL scheme -->
+            <string>myapp</string> 
         </array>
     </dict>
 </array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PureEats needs access to your photos to upload profile pictures</string>
+	<key>NSCameraUsageDescription</key>
+	<string>PureEats needs camera access to take profile pictures</string>
 </dict>

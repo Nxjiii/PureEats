@@ -7,7 +7,7 @@ const FoodResultCard = ({ food, onLog }) => {
       <Text style={styles.name}>{food.name}</Text>
 
       <TouchableOpacity onPress={onLog} style={styles.logButton}>
-        <Text style={styles.logText}>Log</Text>
+        <Text style={styles.logText}>View</Text>
       </TouchableOpacity>
     </View>
   );

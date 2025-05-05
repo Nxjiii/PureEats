@@ -15,7 +15,7 @@ const SetupProfileScreen = ({ onProfileComplete, navigation }) => {
   const [nameAnimation] = useState(new Animated.Value(0));
   const [profilePicture, setProfilePicture] = useState(null);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
-
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -210,56 +210,61 @@ const handleNext = async () => {
       quality: 0.7,
       includeBase64: false,
     });
-
+  
     if (result.didCancel) return;
     if (result.errorCode) {
       Alert.alert('Error', 'Failed to select image');
       return;
     }
-
-    const { uri, fileName, type } = result.assets[0];
-
+  
+    const asset = result.assets[0];
+    if (!asset?.uri || !asset.uri.startsWith('file://')) {
+      Alert.alert('Unsupported image', 'Please select a valid image from your local files.');
+      return;
+    }
+  
+    const { uri, fileName, type } = asset;
+  
     try {
       const fileStat = await RNFS.stat(uri);
       const fileSize = fileStat.size;
-
+  
       if (fileSize > 2 * 1024 * 1024) {
         Alert.alert('Image Too Large', 'Please select an image under 2MB.');
         return;
       }
-
+  
       setProfilePicture(uri);
-
+  
       const fileExtension = fileName?.split('.').pop() || 'jpg';
-      const supaFileName = `${userId}-${Date.now()}.${fileExtension}`;
+      const supaFileName = `${userId}/${Date.now()}.${fileExtension}`;
       const fileType = type || `image/${fileExtension}`;
-
+  
       const response = await fetch(uri);
       const blob = await response.blob();
-
+  
       const { data, error } = await supabase.storage
         .from('profile-pictures')
         .upload(supaFileName, blob, {
           contentType: fileType,
           upsert: true,
         });
-
+  
       if (error) throw error;
-
-      // Generate a signed URL (valid for 1 year)
+  
       const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('profile-pictures')
-        .createSignedUrl(supaFileName, 60 * 60 * 24 * 365); // 1 year
-
+        .createSignedUrl(supaFileName, 60 * 60 * 24 * 365);
+  
       if (urlError) throw urlError;
-
+  
       updateField('profile_picture_url', signedUrlData.signedUrl);
     } catch (err) {
       console.error(err);
       Alert.alert('Upload Failed', 'Something went wrong while uploading the image.');
     }
   };
-
+  
 
 
   const handleBack = () => {
@@ -278,24 +283,29 @@ const handleNext = async () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Back Button */}
-      {step > 0 && <BackButton onPress={handleBack} />}
 
-      <Text style={styles.title}>Set up your profile</Text>
-
-      {/* Step 0 - Welcome */}
-      {step === 0 && (
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Welcome to your profile setup!</Text>
-          <View style={styles.buttonWrapper}>
-            <Button 
-              title="Let's Get Started" 
-              onPress={handleNext} 
-              color="#BB86FC"
-            />
+    
+    <View style={styles.root}>
+    {step > 0 && (
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+    )}
+  
+    <Text style={styles.header}>Set up your profile</Text>
+  
+    {step === 0 && (
+      <View style={styles.welcomeCard}>
+        <Text style={styles.welcomeTitle}>Welcome</Text>
+        <Text style={styles.welcomeHint}>This will take 2 minutes</Text>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={handleNext}
+        >
+          <Text style={styles.actionButtonText}>Continue</Text>
+        </TouchableOpacity>
+  
           </View>
-        </View>
       )}
 
 
@@ -402,7 +412,7 @@ const handleNext = async () => {
   </View>
 )}
 
-     {/* Step 3 - Gender */}
+{/* Step 3 - Gender */}
 {step === 3 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Select your gender</Text>
@@ -425,6 +435,15 @@ const handleNext = async () => {
       >
         <Text style={styles.genderButtonText}>Female</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.genderButton,
+          profileData.gender === 'other' && styles.genderButtonSelected
+        ]}
+        onPress={() => updateField('gender', 'other')}
+      >
+        <Text style={styles.genderButtonText}>Other</Text>
+      </TouchableOpacity>
     </View>
     <View style={styles.buttonWrapper}>
       <Button
@@ -437,6 +456,7 @@ const handleNext = async () => {
   </View>
 )}
 
+
 {/* Step 4 - Age */}
 {step === 4 && (
   <View style={styles.inputContainer}>
@@ -448,23 +468,32 @@ const handleNext = async () => {
         placeholderTextColor="#9E9E9E"
         value={targetFormData.age}
         onChangeText={(text) => {
-          // Only allow numeric input by replacing non-numeric characters
-          const numericValue = text.replace(/[^0-9]/g, '');
-          updateTargetField('age', numericValue);
-        }}
-        keyboardType="numeric"
-      />
-    </View>
+            const numericValue = text.replace(/[^0-9]/g, '').slice(0, 3);
+            const correctedValue = numericValue && parseInt(numericValue) > 90 ? '90' : numericValue;
+            updateTargetField('age', correctedValue);
+          }}
+          keyboardType="number-pad"
+          maxLength={3}
+        />
+      </View>
+    
+    {/* Age validation message */}
+    {targetFormData.age && parseInt(targetFormData.age) < 16 && (
+      <Text style={styles.errorText}>You must be at least 16 to use Pure Eats</Text>
+    )}
+
     <View style={styles.buttonWrapper}>
       <Button
         title="Next"
         onPress={handleNext}
         color="#BB86FC"
-        disabled={!targetFormData.age}
+        disabled={!targetFormData.age || parseInt(targetFormData.age) < 16}
       />
     </View>
   </View>
 )}
+
+
 
 {/* Step 5 - Height */}
 {step === 5 && (
@@ -472,24 +501,47 @@ const handleNext = async () => {
     <Text style={styles.label}>What is your height?</Text>
     <View style={styles.inputWrapper}>
       <TextInput
-        style={styles.input}
-        placeholder="Enter your height in cm"
+        style={[
+          styles.input,
+          targetFormData.height && 
+          (parseInt(targetFormData.height) < 120 || parseInt(targetFormData.height) > 230) && 
+          styles.inputError
+        ]}
+        placeholder="Enter height (120-230cm)"
         placeholderTextColor="#9E9E9E"
         value={targetFormData.height}
         onChangeText={(text) => {
-          // Only allow numeric input
           const numericValue = text.replace(/[^0-9]/g, '');
           updateTargetField('height', numericValue);
         }}
-        keyboardType="numeric"
+        keyboardType="number-pad"
+        maxLength={3}
       />
     </View>
+
+    {/* acc feedback */}
+    {targetFormData.height ? (
+      parseInt(targetFormData.height) < 120 ? (
+        <Text style={styles.errorText}>Minimum height is 120cm</Text>
+      ) : parseInt(targetFormData.height) > 230 ? (
+        <Text style={styles.errorText}>Maximum height is 230cm</Text>
+      ) : (
+        <Text style={styles.validText}>✓ Valid height</Text>
+      )
+    ) : (
+      <Text style={styles.hintText}>Typically between 120-230cm</Text>
+    )}
+
     <View style={styles.buttonWrapper}>
       <Button
         title="Next"
         onPress={handleNext}
         color="#BB86FC"
-        disabled={!targetFormData.height}
+        disabled={
+          !targetFormData.height || 
+          parseInt(targetFormData.height) < 120 || 
+          parseInt(targetFormData.height) > 230
+        }
       />
     </View>
   </View>
@@ -501,28 +553,53 @@ const handleNext = async () => {
     <Text style={styles.label}>What is your weight?</Text>
     <View style={styles.inputWrapper}>
       <TextInput
-        style={styles.input}
-        placeholder="Enter your weight in kg"
+        style={[
+          styles.input,
+          targetFormData.weight && 
+          (parseInt(targetFormData.weight) < 40 || 
+          parseInt(targetFormData.weight) > 200) && 
+          styles.inputError
+        ]}
+        placeholder="Enter weight (40-200kg)"
         placeholderTextColor="#9E9E9E"
         value={targetFormData.weight}
         onChangeText={(text) => {
-          // Only allow numeric input
           const numericValue = text.replace(/[^0-9]/g, '');
           updateTargetField('weight', numericValue);
         }}
-        keyboardType="numeric"
+        keyboardType="number-pad"
+        maxLength={3}
       />
     </View>
+
+    {/* acc feedback */}
+    {targetFormData.weight ? (
+      parseInt(targetFormData.weight) < 40 ? (
+        <Text style={styles.errorText}>Minimum weight is 40kg</Text>
+      ) : parseInt(targetFormData.weight) > 200 ? (
+        <Text style={styles.errorText}>Maximum weight is 200kg</Text>
+      ) : (
+        <Text style={styles.validText}>✓ Valid weight</Text>
+      )
+    ) : (
+      <Text style={styles.hintText}>Typically between 40-200kg</Text>
+    )}
+
     <View style={styles.buttonWrapper}>
       <Button
         title="Next"
         onPress={handleNext}
         color="#BB86FC"
-        disabled={!targetFormData.weight}
+        disabled={
+          !targetFormData.weight || 
+          parseInt(targetFormData.weight) < 40 || 
+          parseInt(targetFormData.weight) > 200
+        }
       />
     </View>
   </View>
 )}
+
 
 {/* Step 7 - Activity Level */}
 {step === 7 && (
@@ -601,7 +678,7 @@ const handleNext = async () => {
         title="Calculate My Target"
         onPress={() => {
           if (isTargetDataValid()) {
-            // Use CalorieCalculator component to calculate
+            //  CalorieCalculator calculates
             const calculatedData = CalorieCalculator.calculate({
               gender: profileData.gender,
               age: parseInt(targetFormData.age),
@@ -795,7 +872,7 @@ const handleNext = async () => {
 {step === 11 && (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Add a profile picture</Text>
-    
+
     {profilePicture ? (
       <Image 
         source={{ uri: profilePicture }}
@@ -805,7 +882,7 @@ const handleNext = async () => {
     ) : (
       <View style={styles.imagePreview} />
     )}
-    
+
     <View style={styles.buttonWrapper}>
       <Button
         title="Choose Photo"
@@ -813,14 +890,42 @@ const handleNext = async () => {
         color="#BB86FC"
       />
     </View>
-    
-    <TouchableOpacity onPress={handleNext}>
-      <Text style={[styles.hintText, { color: '#BB86FC', marginTop: 20 }]}>
+
+    <View style={styles.buttonWrapper}>
+      <Button
+        title={uploading ? "Uploading..." : "Next"}
+        onPress={async () => {
+          if (!profilePicture) {
+            handleNext();
+            return;
+          }
+
+          setUploading(true);
+          try {
+            handleNext();
+          } catch (error) {
+            Alert.alert('Error', 'Unexpected error occurred.');
+            console.error('Upload error:', error);
+          } finally {
+            setUploading(false);
+          }
+        }}
+        color="#BB86FC"
+        disabled={uploading}
+      />
+    </View>
+
+    <TouchableOpacity onPress={handleNext} disabled={uploading}>
+      <Text style={[styles.hintText, { 
+        color: uploading ? '#9E9E9E' : '#BB86FC', 
+        marginTop: 20 
+      }]}>
         Skip for now
       </Text>
     </TouchableOpacity>
   </View>
 )}
+
 
 {/* Step 12 - Username Selection */}
 {step === 12 && (
@@ -915,6 +1020,61 @@ const handleNext = async () => {
 };
 
 const styles = StyleSheet.create({
+
+
+//step 0 - Welcome
+  root: {
+    flex: 1,
+    backgroundColor: '#121212',
+    padding: 20,
+    justifyContent: 'center',
+  },
+  header: {
+    color: '#E0E0E0',
+    fontSize: 20,
+    fontWeight: '400', 
+    textAlign: 'center',
+    marginBottom: 48,
+    letterSpacing: 0.5,
+  },
+  welcomeCard: {
+    alignItems: 'center',
+    marginBottom: 64,
+  },
+  welcomeTitle: {
+    color: '#E0E0E0',
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  welcomeHint: {
+    color: '#757575', 
+    fontSize: 14,
+  },
+  actionButton: {
+    width: '40%',
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#BB86FC',
+    borderRadius: 20,
+    marginTop: 24,
+  },
+  actionButtonText: {
+    color: '#BB86FC',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 48,
+    left: 20,
+    padding: 12,
+  },
+  backButtonText: {
+    color: '#BB86FC',
+    fontSize: 16,
+  },
+
   container: {
     backgroundColor: '#121212',
     flex: 1,
@@ -1142,6 +1302,11 @@ activityDescription: {
   color: '#9E9E9E',
   fontSize: 12,
   textAlign: 'center',
+  marginTop: 4,
+},
+validText: {
+  color: '#4CAF50',
+  fontSize: 14,
   marginTop: 4,
 },
 });
