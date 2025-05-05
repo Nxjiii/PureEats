@@ -2,7 +2,6 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../Screens/HomeScreen';
 import ChatbotScreen from '../Screens/ChatbotScreen';
-import CommunityScreen from '../Screens/CommunityScreen';
 import Logger from '../Screens/Logger';
 
 const Tab = createBottomTabNavigator();
@@ -18,13 +17,12 @@ export default function MainTabs() {
         tabBarItemStyle: {
           backgroundColor: 'transparent', 
         },
-        tabBarActiveTintColor: '#BB86FC', // Purple active text to match your color scheme
-        tabBarInactiveTintColor: '#9E9E9E', // Gray inactive text
+        tabBarActiveTintColor: '#BB86FC', 
+        tabBarInactiveTintColor: '#9E9E9E',
       }}>
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Chatbot" component={ChatbotScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Log" component={Logger} options={{ headerShown: false }} />
-      <Tab.Screen name="Community" component={CommunityScreen} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }

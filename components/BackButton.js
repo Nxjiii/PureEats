@@ -7,7 +7,7 @@ const BackButton = ({ onPress }) => {
 
   return (
     <TouchableOpacity 
-      onPress={onPress || (() => navigation.goBack())} // Use custom logic if provided, otherwise go back
+      onPress={onPress || (() => navigation.goBack())} 
       style={styles.button}
     >
       <Text style={styles.text}>←</Text>

@@ -1,91 +1,127 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, TextInput, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { supabase } from '../lib/supabaseClient';
 
 const ChatbotScreen = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
-  const [botTypingMessage, setBotTypingMessage] = useState(''); // For typing effect
+  const [botTypingMessage, setBotTypingMessage] = useState('');
+  const [username, setUsername] = useState('');
+  const [supabaseToken, setSupabaseToken] = useState(''); 
   const scrollViewRef = useRef();
 
-  const sendMessage = async () => {
-    if (message.trim()) {
-      // Add the user's message to the chat history
-      setChatHistory([...chatHistory, { user: message }]);
-      setMessage(''); // Clear the message input field
-  
-      // TEMPORARY: Hardcoded bot response for testing
-      // This block should be removed once the actual logic (e.g., API integration) is ready
-      setBotTypingMessage('');
-      setTimeout(() => {
-        simulateTypingEffect(" this is a hardcoded bot response."); // Example bot response
-      }, 500);
-      // END OF TEMPORARY BLOCK
-  
-      // Actual logic for sending message to the API (commented out for now)
-      /*
+
+
+
+
+  //--------------------- Fetch session and username on mount---------------------------
+  useEffect(() => {
+    const fetchUserData = async () => {
       try {
-        const response = await fetch('https://pureeats.onrender.com/webhooks/rest/webhook', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sender: 'user',
-            message: message,
-          }),
-        });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-  
-        const data = await response.json();
-  
-        if (data && data.length > 0) {
-          simulateTypingEffect(data[0].text);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        setSupabaseToken(session.access_token); // ✅ Save token
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+
+        setUsername(profile?.username || 'User');
       } catch (error) {
-        console.error('Error sending message to Rasa:', error);
-        simulateTypingEffect('Sorry, there was an error. Please try again.');
+        console.error('Fetch error:', error);
       }
-      */
+    };
+    fetchUserData();
+  }, []);
+
+
+
+
+  // -------------------------------Handle message sending-------------------------------------------
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+  
+    // space between numbers and letters so model can understand
+    let cleanedMessage = message.replace(/(\d)([a-zA-Z])/g, '$1 $2');
+  
+    const userMessage = cleanedMessage;
+    setChatHistory(prev => [...prev, { user: userMessage }]);
+    setMessage('');
+  
+    const metadata = {
+      username,
+      supabase_token: supabaseToken,
+    };
+  
+    console.log('Sending metadata:', { username });
+  
+    try {
+      setBotTypingMessage('Typing...');
+  
+      const response = await fetch('http://localhost:5005/webhooks/rest/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: username,
+          message: userMessage,
+          metadata, // Send both username + token
+        }),
+      });
+  
+      const botResponses = await response.json();
+      botResponses.forEach(msg => msg.text && simulateTypingEffect(msg.text));
+      
+    } catch (error) {
+      simulateTypingEffect('⚠️ Connection error');
+      console.error('API Error:', error);
     }
   };
-
-  const simulateTypingEffect = (fullMessage) => {
-    setBotTypingMessage(''); // Reset the bot message
-    let index = 0;
-    const chunkSize = 5; // Adjust the size of each chunk here
   
+
+
+  //-------------------------------- Simulate typing effect-------------------------------
+  const simulateTypingEffect = (fullMessage) => {
+    setBotTypingMessage('');
+    let index = 0;
+    const chunkSize = 5;
+
     const typingInterval = setInterval(() => {
       if (index < fullMessage.length) {
-        // Get the current chunk of the message
         const currentChunk = fullMessage.slice(index, index + chunkSize);
         setBotTypingMessage((prev) => prev + currentChunk);
-        index += chunkSize; // Move to the next chunk
+        index += chunkSize;
       } else {
         clearInterval(typingInterval);
         setChatHistory((prevChatHistory) => [
           ...prevChatHistory,
           { bot: fullMessage },
         ]);
-        setBotTypingMessage(''); // Clear the typing effect message
+        setBotTypingMessage('');
       }
-    }, 100); // Adjust speed here (100ms per chunk)
+    }, 100);
   };
 
+
+  // Clear chat history
   const clearChat = () => {
     setChatHistory([]);
   };
+
+
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Chatbot</Text>
 
       <View style={styles.chatContainer}>
-        <ScrollView 
-          style={styles.chatWindow} 
-          ref={scrollViewRef} 
+        <ScrollView
+          style={styles.chatWindow}
+          ref={scrollViewRef}
           onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
         >
           {chatHistory.map((entry, index) => (
@@ -94,7 +130,6 @@ const ChatbotScreen = () => {
             </View>
           ))}
 
-          {/* Display the typing effect */}
           {botTypingMessage !== '' && (
             <View style={[styles.chatBubble, styles.botBubble]}>
               <Text style={styles.chatText}>{botTypingMessage}</Text>
@@ -106,7 +141,7 @@ const ChatbotScreen = () => {
           <TouchableOpacity style={styles.clearButton} onPress={clearChat}>
             <Text style={styles.clearButtonText}>Clear Chat</Text>
           </TouchableOpacity>
-        )}                           
+        )}
       </View>
 
       <View style={styles.inputContainer}>
@@ -115,10 +150,9 @@ const ChatbotScreen = () => {
           placeholder="Type a message..."
           value={message}
           onChangeText={setMessage}
-          returnKeyType="send"            
+          returnKeyType="send"
           onSubmitEditing={sendMessage}
         />
-        {/* Removed Icon and replaced with a simple Text button */}
         <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>

@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNavigationContainerRef } from '@react-navigation/native';
 import MainNavigator from './navigation/MainNavigator';
 
-// Create navigation reference for potential use outside of components
+//navigation reference for use outside of components
 export const navigationRef = createNavigationContainerRef();
 
 // Main App Component

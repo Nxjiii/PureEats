@@ -57,7 +57,7 @@ const Search = ({ route }) => {
          food={item}
           onLog={() => navigation.navigate('FoodDetails', { 
           food: item,
-          mealType: route.params?.mealType // Forward the mealType from route.params
+          mealType: route.params?.mealType // Forward the mealType
        })}
         />
           

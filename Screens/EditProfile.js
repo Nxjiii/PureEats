@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  TextInput,
-  SafeAreaView,
-  StatusBar
-} from 'react-native';
+import {  View, Text,  StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, SafeAreaView, StatusBar, Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabaseClient';
 import CustomCheckbox from '../components/CustomCheckbox';
@@ -29,6 +19,10 @@ const EditProfile = () => {
     target_fats: '',
     target_protein: ''
   });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     fetchProfileData();
@@ -68,7 +62,7 @@ const EditProfile = () => {
     
     setNutritionProfile({ ...nutritionProfile, allergies: newAllergies });
   };
-
+  
   const handleNoAllergiesChange = () => {
     const newAllergies = nutritionProfile.allergies === null ? [] : null;
     setNutritionProfile({ ...nutritionProfile, allergies: newAllergies });
@@ -94,6 +88,48 @@ const EditProfile = () => {
       console.error('Error updating profile:', error);
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Verify current password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (authError) {
+        Alert.alert('Error', 'Current password is incorrect');
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      Alert.alert('Success', 'Password updated successfully');
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      Alert.alert('Error', 'Failed to update password');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -136,20 +172,27 @@ const EditProfile = () => {
             
             <View style={styles.spacer} />
             <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Username</Text>
-            <View style={styles.usernameContainer}>
-         <TextInput
-            style={[styles.textInput, styles.disabledInput]}
-            value={profile.username}
-           editable={false}
-           selectable={false}
-           />
-            <View style={styles.viewOnlyBadge}>
-           <Text style={styles.viewOnlyText}>View Only</Text>
-          </View>
-          </View>
-         </View>
+              <Text style={styles.inputLabel}>Username</Text>
+              <View style={styles.usernameContainer}>
+                <TextInput
+                  style={[styles.textInput, styles.disabledInput]}
+                  value={profile.username}
+                  editable={false}
+                  selectable={false}
+                />
+                <View style={styles.viewOnlyBadge}>
+                  <Text style={styles.viewOnlyText}>View Only</Text>
+                </View>
+              </View>
+            </View>
 
+            <View style={styles.spacer} />
+            <TouchableOpacity 
+              style={styles.changePasswordButton}
+              onPress={() => setShowPasswordModal(true)}
+            >
+              <Text style={styles.changePasswordText}>Change Password</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -184,84 +227,80 @@ const EditProfile = () => {
           </View>
         </View>
 
-       {/* Nutrition Targets */}
-     <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Nutrition Targets</Text>
+        {/* Nutrition Targets */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Nutrition Targets</Text>
+          <View style={styles.card}>
+            <View style={styles.macrosContainer}>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroLabel}>Daily Calories</Text>
+                <View style={styles.macroValueContainer}>
+                  <TextInput
+                    style={styles.disabledInput}
+                    value={nutritionProfile.target_calories?.toString() || '0'}
+                    editable={false}
+                    selectable={false}
+                  />
+                  <View style={styles.unitBadge}>
+                    <Text style={styles.unitText}>kcal</Text>
+                  </View>
+                </View>
+              </View>
 
-    <View style={styles.card}>
-    <View style={styles.macrosContainer}>
-    <View style={styles.macroItem}>
-    <Text style={styles.macroLabel}>Daily Calories</Text>
-    <View style={styles.macroValueContainer}>
-      
-          <TextInput
-            style={styles.disabledInput}
-            value={nutritionProfile.target_calories?.toString() || '0'}
-            editable={false}
-            selectable={false}
-          />
-          <View style={styles.unitBadge}>
-            <Text style={styles.unitText}>kcal</Text>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroLabel}>Carbs</Text>
+                <View style={styles.macroValueContainer}>
+                  <TextInput
+                    style={styles.disabledInput}
+                    value={nutritionProfile.target_carbs?.toString() || '0'}
+                    editable={false}
+                    selectable={false}
+                  />
+                  <View style={styles.unitBadge}>
+                    <Text style={styles.unitText}>g</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.macroItem}>
+                <Text style={styles.macroLabel}>Protein</Text>
+                <View style={styles.macroValueContainer}>
+                  <TextInput
+                    style={styles.disabledInput}
+                    value={nutritionProfile.target_protein?.toString() || '0'}
+                    editable={false}
+                    selectable={false}
+                  />
+                  <View style={styles.unitBadge}>
+                    <Text style={styles.unitText}>g</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.macroItem}>
+                <Text style={styles.macroLabel}>Fats</Text>
+                <View style={styles.macroValueContainer}>
+                  <TextInput
+                    style={styles.disabledInput}
+                    value={nutritionProfile.target_fats?.toString() || '0'}
+                    editable={false}
+                    selectable={false}
+                  />
+                  <View style={styles.unitBadge}>
+                    <Text style={styles.unitText}>g</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.recalculateButton}
+              onPress={() => navigation.navigate('Recalculate')}
+            >
+              <Text style={styles.recalculateText}>Recalculate Macros</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
-
-      <View style={styles.macroItem}>
-        <Text style={styles.macroLabel}>Carbs</Text>
-        <View style={styles.macroValueContainer}>
-          <TextInput
-            style={styles.disabledInput}
-            value={nutritionProfile.target_carbs?.toString() || '0'}
-            editable={false}
-            selectable={false}
-          />
-          <View style={styles.unitBadge}>
-            <Text style={styles.unitText}>g</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.macroItem}>
-        <Text style={styles.macroLabel}>Protein</Text>
-        <View style={styles.macroValueContainer}>
-          <TextInput
-            style={styles.disabledInput}
-            value={nutritionProfile.target_protein?.toString() || '0'}
-            editable={false}
-            selectable={false}
-          />
-          <View style={styles.unitBadge}>
-            <Text style={styles.unitText}>g</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.macroItem}>
-        <Text style={styles.macroLabel}>Fats</Text>
-        <View style={styles.macroValueContainer}>
-          <TextInput
-            style={styles.disabledInput}
-            value={nutritionProfile.target_fats?.toString() || '0'}
-            editable={false}
-            selectable={false}
-          />
-          <View style={styles.unitBadge}>
-            <Text style={styles.unitText}>g</Text>
-          </View>
-        </View>
-      </View>
-    </View>
-          
-    <TouchableOpacity 
-      style={styles.recalculateButton}
-      onPress={() => navigation.navigate('Recalculate')}
-    >
-      <Text style={styles.recalculateText}>Recalculate Macros</Text>
-    </TouchableOpacity>
-  </View>
-</View>
-
-
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
@@ -285,6 +324,59 @@ const EditProfile = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Password Update Modal */}
+      {showPasswordModal && (
+        <View style={styles.passwordModal}>
+          <View style={styles.passwordContainer}>
+            <Text style={styles.passwordTitle}>Update Password</Text>
+            
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Current Password"
+              secureTextEntry
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              autoFocus
+              placeholderTextColor="#6D6D6D"
+            />
+            
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="New Password"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholderTextColor="#6D6D6D"
+            />
+            
+            <View style={styles.passwordButtons}>
+              <TouchableOpacity 
+                style={[styles.passwordButton, styles.cancelButton]}
+                onPress={() => {
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setShowPasswordModal(false);
+                }}
+              >
+                <Text style={styles.passwordButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.passwordButton, styles.confirmButton]}
+                onPress={handleUpdatePassword}
+                disabled={passwordLoading}
+              >
+                {passwordLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.passwordButtonText}>Update</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -503,7 +595,70 @@ const styles = StyleSheet.create({
     color: '#BB86FC',
     fontSize: 14,
     fontWeight: '600',
-  }
+  },
+  changePasswordButton: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    padding: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3D3D3D',
+  },
+  changePasswordText: {
+    color: '#BB86FC',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  passwordModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  passwordContainer: {
+    backgroundColor: '#1E1E1E',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  passwordTitle: {
+    color: '#E0E0E0',
+    fontSize: 18,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  passwordInput: {
+    backgroundColor: '#121212',
+    color: '#E0E0E0',
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  passwordButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  passwordButton: {
+    padding: 12,
+    borderRadius: 5,
+    width: '48%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#333',
+  },
+  confirmButton: {
+    backgroundColor: '#BB86FC',
+  },
+  passwordButtonText: {
+    color: '#FFF',
+    fontWeight: '500',
+  },
 });
 
 export default EditProfile;

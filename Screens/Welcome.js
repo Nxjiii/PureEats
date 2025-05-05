@@ -9,9 +9,8 @@ const Welcome = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(1);
 
 
-  // Function to handle entering the app
   const handleEnterApp = () => {
-    console.log(navigation.getState()); // Check what state you're in before resetting
+    console.log(navigation.getState()); 
 
     navigation.navigate('Main');
       };
@@ -39,19 +38,26 @@ const Welcome = ({ navigation }) => {
     <View style={styles.stepContainer}>
       <Text style={styles.welcomeTitle}>Terms and Conditions</Text>
       <ScrollView style={styles.termsContainer}>
-        <Text style={styles.termsText}>
-          By using PureEats, you agree to the following terms and conditions:
-          
-          1. PRIVACY: We collect minimal data necessary to provide our services. Your nutrition data is stored securely and not shared with third parties without your consent.
-          
-          2. USER DATA: You retain ownership of your data. We use it only to provide and improve our services.
-          
-          3. HEALTH DISCLAIMER: PureEats provides general nutritional guidance and is not a substitute for professional medical advice. Always consult with healthcare professionals for personalized nutrition advice.
-          
-          4. SERVICE AVAILABILITY: We strive to maintain uninterrupted service but cannot guarantee 100% availability.
-          
-          5. ACCOUNT RESPONSIBILITY: You are responsible for maintaining the confidentiality of your account information.
-        </Text>
+      <Text style={styles.termsText}>
+  By using PureEats, you agree to the following terms and conditions:
+
+  1. **PRIVACY**: We collect minimal data necessary to provide our services. Your personal and nutrition data is stored securely and will not be shared with third parties without your explicit consent, except where required by law.
+
+  2. **USER DATA**: You retain full ownership of your data. We use your data solely to provide and enhance our services, including nutrition tracking, recommendations, and personalized experiences.
+
+  3. **HEALTH DISCLAIMER**: PureEats offers general nutritional guidance and is not intended to replace professional medical advice. Always consult with healthcare professionals before making significant changes to your diet or health routine.
+
+  4. **SERVICE AVAILABILITY**: We aim to maintain uninterrupted service but cannot guarantee 100% availability. We are not liable for service interruptions due to unforeseen technical issues or maintenance.
+
+  5. **ACCOUNT RESPONSIBILITY**: You are responsible for maintaining the confidentiality of your account credentials and any activities that occur under your account. Notify us immediately if you suspect unauthorized access.
+
+  6. **MINIMUM AGE REQUIREMENT**: By using PureEats, you confirm that you are at least 16 years old. If you are under 16, you must have the consent of a parent or guardian to use this service. We may request proof of age to verify compliance.
+
+  7. **MODIFICATION OF TERMS**: We reserve the right to modify these terms at any time. Any changes will be communicated to you, and continued use of PureEats after such modifications indicates acceptance of the updated terms.
+
+  8. **GOVERNING LAW**: These terms are governed by the laws of the jurisdiction in which PureEats operates. Any disputes will be resolved in the appropriate courts of that jurisdiction.
+</Text>
+
       </ScrollView>
       
       <TouchableOpacity 
@@ -93,7 +99,7 @@ const Welcome = ({ navigation }) => {
         • Track your meals with our easy logging system
         • Monitor your nutritional goals
         • Discover new recipes tailored to your preferences
-        • Stay on track with personalized insights
+        • Stay on track with personalised insights
       </Text>
       <TouchableOpacity 
         style={styles.enterButton}

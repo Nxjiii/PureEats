@@ -143,13 +143,13 @@ card: {
   justifyContent: 'center',
   alignItems: 'center',
   marginRight: CARD_MARGIN,
-  borderWidth: 1, // Adds a thin border
-  borderColor: '#333', // Color of the border
-  shadowColor: '#000', // Shadow color
-  shadowOffset: { width: 0, height: 2 }, // Shadow offset (horizontal, vertical)
-  shadowOpacity: 0.8, // Shadow opacity
-  shadowRadius: 4, // Shadow blur radius
-  elevation: 5, // For Android shadow
+  borderWidth: 1,
+  borderColor: '#333', 
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 }, 
+  shadowOpacity: 0.8, 
+  shadowRadius: 4, 
+  elevation: 5, 
 },
 
   cardText: {
