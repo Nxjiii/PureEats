@@ -1,24 +1,17 @@
+import 'react-native-url-polyfill/auto';
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNavigationContainerRef } from '@react-navigation/native';
+import MainNavigator from './navigation/MainNavigator';
 
-const Stack = createStackNavigator();
+//navigation reference for use outside of components
+export const navigationRef = createNavigationContainerRef();
 
-function HomeScreen() {
-  return (
-    <View>
-      <Text>Welcome to Pure Eats!</Text>
-    </View>
-  );
-}
-
+// Main App Component
 function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
+    <NavigationContainer ref={navigationRef}>
+      <MainNavigator />
     </NavigationContainer>
   );
 }
