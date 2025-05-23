@@ -1,29 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, TextInput, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
-import { supabase } from '../lib/supabaseClient';
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  View,
+  TextInput,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
+import {supabase} from '../lib/supabaseClient';
 
 const ChatbotScreen = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [botTypingMessage, setBotTypingMessage] = useState('');
   const [username, setUsername] = useState('');
-  const [supabaseToken, setSupabaseToken] = useState(''); 
+  const [supabaseToken, setSupabaseToken] = useState('');
   const scrollViewRef = useRef();
-
-
-
-
 
   //--------------------- Fetch session and username on mount---------------------------
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: {session},
+        } = await supabase.auth.getSession();
         if (!session?.user) return;
 
-        setSupabaseToken(session.access_token); // ✅ Save token
+        setSupabaseToken(session.access_token); // Save token
 
-        const { data: profile } = await supabase
+        const {data: profile} = await supabase
           .from('profiles')
           .select('username')
           .eq('id', session.user.id)
@@ -37,53 +43,50 @@ const ChatbotScreen = () => {
     fetchUserData();
   }, []);
 
-
-
-
   // -------------------------------Handle message sending-------------------------------------------
   const sendMessage = async () => {
     if (!message.trim()) return;
-  
+
     // space between numbers and letters so model can understand
     let cleanedMessage = message.replace(/(\d)([a-zA-Z])/g, '$1 $2');
-  
+
     const userMessage = cleanedMessage;
-    setChatHistory(prev => [...prev, { user: userMessage }]);
+    setChatHistory(prev => [...prev, {user: userMessage}]);
     setMessage('');
-  
+
     const metadata = {
       username,
       supabase_token: supabaseToken,
     };
-  
-    console.log('Sending metadata:', { username });
-  
+
+    console.log('Sending metadata:', {username});
+
     try {
       setBotTypingMessage('Typing...');
-  
-      const response = await fetch('http://localhost:5005/webhooks/rest/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender: username,
-          message: userMessage,
-          metadata, // Send both username + token
-        }),
-      });
-  
+
+      const response = await fetch(
+        'http://localhost:5005/webhooks/rest/webhook',
+        {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            sender: username,
+            message: userMessage,
+            metadata, // Send both username + token
+          }),
+        },
+      );
+
       const botResponses = await response.json();
       botResponses.forEach(msg => msg.text && simulateTypingEffect(msg.text));
-      
     } catch (error) {
       simulateTypingEffect('⚠️ Connection error');
       console.error('API Error:', error);
     }
   };
-  
-
 
   //-------------------------------- Simulate typing effect-------------------------------
-  const simulateTypingEffect = (fullMessage) => {
+  const simulateTypingEffect = fullMessage => {
     setBotTypingMessage('');
     let index = 0;
     const chunkSize = 5;
@@ -91,28 +94,23 @@ const ChatbotScreen = () => {
     const typingInterval = setInterval(() => {
       if (index < fullMessage.length) {
         const currentChunk = fullMessage.slice(index, index + chunkSize);
-        setBotTypingMessage((prev) => prev + currentChunk);
+        setBotTypingMessage(prev => prev + currentChunk);
         index += chunkSize;
       } else {
         clearInterval(typingInterval);
-        setChatHistory((prevChatHistory) => [
+        setChatHistory(prevChatHistory => [
           ...prevChatHistory,
-          { bot: fullMessage },
+          {bot: fullMessage},
         ]);
         setBotTypingMessage('');
       }
     }, 100);
   };
 
-
   // Clear chat history
   const clearChat = () => {
     setChatHistory([]);
   };
-
-
-
-  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,10 +120,16 @@ const ChatbotScreen = () => {
         <ScrollView
           style={styles.chatWindow}
           ref={scrollViewRef}
-          onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
-        >
+          onContentSizeChange={() =>
+            scrollViewRef.current.scrollToEnd({animated: true})
+          }>
           {chatHistory.map((entry, index) => (
-            <View key={index} style={[styles.chatBubble, entry.user ? styles.userBubble : styles.botBubble]}>
+            <View
+              key={index}
+              style={[
+                styles.chatBubble,
+                entry.user ? styles.userBubble : styles.botBubble,
+              ]}>
               <Text style={styles.chatText}>{entry.user || entry.bot}</Text>
             </View>
           ))}
